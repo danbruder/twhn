@@ -1,49 +1,112 @@
 module Pages.Home_ exposing (view)
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Css
+import Css.Global
+import Html.Styled as Html exposing (..)
+import Html.Styled.Attributes as Attr exposing (..)
+import Tailwind.Breakpoints as Breakpoints
+import Tailwind.Utilities as Tw exposing (..)
 import View exposing (View)
 
 
 view : View msg
 view =
     { title = "Homepage"
-    , body = [ body ]
+    , body =
+        [ Html.toUnstyled <|
+            body
+        ]
     }
 
 
 body =
     div
-        [ class "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-        ]
-        [ div [ class "max-w-2xl mx-auto  " ]
-            [ div [ class "p-4 border" ]
-                [ h1 [ class "font-bold text-2xl" ] [ text "Home" ]
+        [ css
+            [ max_w_7xl
+            , mx_auto
+            , px_4
+            , Breakpoints.sm
+                [ px_6
                 ]
-            , ul [ class "p-4 border" ] <|
-                (stories
-                    |> List.indexedMap
-                        (\i story ->
-                            li [ class "py-2" ]
-                                [ span [ class "font-bold mr-2" ]
-                                    [ [ String.fromInt (i + 1)
-                                      , "."
-                                      , " "
-                                      , story.title
-                                      ]
-                                        |> String.join ""
-                                        |> text
-                                    ]
-                                , span [ class "text-gray-500 font-light" ]
-                                    [ [ "(", story.source, ")" ]
-                                        |> String.join ""
-                                        |> text
-                                    ]
-                                ]
-                        )
-                )
+            , Breakpoints.lg
+                [ px_8
+                ]
             ]
         ]
+        [ Css.Global.global Tw.globalStyles
+        , div [ css [ flex ] ]
+            [ div
+                [ css [ mx_auto ] ]
+                [ viewMainMenu ]
+            , div
+                [ css [ max_w_4xl, mx_auto, flex_grow ] ]
+                [ div [ css [ p_4, border_t, border_r, border_l, border_gray_200 ] ] [ h1 [ css [ font_bold, text_xl ] ] [ text "Home" ] ]
+                , div [ css [ p_4, border, border_gray_200 ] ] [ viewStories ]
+                ]
+            , div
+                [ css [] ]
+                [ viewSidebar ]
+            ]
+        ]
+
+
+viewMainMenu : Html msg
+viewMainMenu =
+    div
+        [ css
+            [ p_4
+            ]
+        ]
+        [ div
+            [ css
+                [ border_0
+                , w_8
+                , h_8
+                ]
+            ]
+            [ img [ css [ rounded_full ], src "/logo.png" ] []
+            ]
+        ]
+
+
+viewSidebar : Html msg
+viewSidebar =
+    div []
+        [ text "Sidebar"
+        ]
+
+
+viewStories : Html msg
+viewStories =
+    ul
+        [ css []
+        ]
+    <|
+        (stories
+            |> List.indexedMap
+                (\i story ->
+                    li [ css [ py_2, text_sm ] ]
+                        [ span
+                            [ css [ font_bold, mr_2 ]
+                            ]
+                            [ [ String.fromInt (i + 1)
+                              , "."
+                              , " "
+                              , story.title
+                              ]
+                                |> String.join ""
+                                |> text
+                            ]
+                        , span
+                            [ css [ text_gray_500, font_light ]
+                            ]
+                            [ [ "(", story.source, ")" ]
+                                |> String.join ""
+                                |> text
+                            ]
+                        ]
+                )
+        )
 
 
 type alias Story =
