@@ -128,7 +128,7 @@ subscriptions model =
 
 view : Model -> View msg
 view model =
-    { title = "Homepage"
+    { title = "TWHN"
     , body =
         [ Html.toUnstyled <|
             body model
@@ -136,6 +136,7 @@ view model =
     }
 
 
+body : Model -> Html msg
 body model =
     div
         [ css
@@ -153,7 +154,7 @@ body model =
         [ Css.Global.global Tw.globalStyles
         , div [ css [ flex ] ]
             [ div
-                [ css [ mx_auto ] ]
+                [ css [ mx_auto, Tw.hidden, Breakpoints.lg [ block ] ] ]
                 [ viewMainMenu ]
             , div
                 [ css [ max_w_4xl, mx_auto, flex_grow ] ]
@@ -161,7 +162,7 @@ body model =
                 , div [ css [ p_4, border, border_gray_200 ] ] [ viewStories model ]
                 ]
             , div
-                [ css [] ]
+                [ css [ mx_auto, Tw.hidden, Breakpoints.lg [ block ] ] ]
                 [ viewSidebar ]
             ]
         ]
@@ -189,7 +190,7 @@ viewMainMenu =
 viewSidebar : Html msg
 viewSidebar =
     div []
-        [ text "Sidebar"
+        [ text ""
         ]
 
 
