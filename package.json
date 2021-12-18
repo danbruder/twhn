@@ -1,0 +1,13 @@
+{
+  "name": "twhn",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Dan Bruder <danbruder@hey.com>",
+  "license": "MIT",
+  "dependencies": {
+    "elm-spa": "^6.0.4"
+  } ,
+  "scripts": { 
+      "start": "elm-spa server"
+  }
+}
