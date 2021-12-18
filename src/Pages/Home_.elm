@@ -205,8 +205,18 @@ viewStories model =
             |> List.indexedMap
                 (\i story ->
                     li [ css [ py_2, text_sm ] ]
-                        [ span
-                            [ css [ font_bold, mr_2 ]
+                        [ a
+                            [ css
+                                [ font_bold
+                                , mr_2
+                                , if story.url == Nothing then
+                                    block
+
+                                  else
+                                    underline
+                                ]
+                            , href (story.url |> Maybe.map Url.toString |> Maybe.withDefault "")
+                            , target "blank"
                             ]
                             [ [ String.fromInt (i + 1)
                               , "."
