@@ -120,7 +120,7 @@ viewStory model =
                         Just url ->
                             a
                                 [ href (story.url |> Maybe.map Url.toString |> Maybe.withDefault "")
-                                , css [ block, text_gray_500, font_light ]
+                                , css [ block, text_gray_500, font_light, underline ]
                                 ]
                                 [ url.host |> text
                                 ]
