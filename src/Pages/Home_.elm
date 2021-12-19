@@ -207,7 +207,7 @@ getTopStories =
     Query.topStories
         (\optionals ->
             { optionals
-                | limit = Present 10
+                | limit = Present 30
             }
         )
         (SelectionSet.succeed Story
