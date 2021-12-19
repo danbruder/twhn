@@ -9,8 +9,11 @@
   },
   "scripts": {
     "start": "elm-spa server",
-    "build": "elm-spa build"
+    "build": "elm-spa build",
+    "api": "elm-graphql https://dawn-forest-4900.fly.dev --base Juniper"
+
   },
   "devDependencies": {
+    "@dillonkearns/elm-graphql": "^4.2.2"
   }
 }

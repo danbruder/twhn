@@ -1,13 +1,18 @@
 module Pages.Home_ exposing (Model, Msg, page)
 
+import Api
 import Css
 import Css.Global
 import Dict exposing (Dict)
 import Gen.Params.Home_ exposing (Params)
+import Graphql.Http
+import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, with)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
 import Http
 import Json.Decode as JD
+import Juniper.Object.Story as Story
+import Juniper.Query as Query
 import Page
 import Request
 import Set exposing (Set)
@@ -33,24 +38,13 @@ page shared req =
 
 
 type alias Model =
-    { stories : Dict Int Story
-    , topIds : List Int
-    , fetched : Set Int
-    , toFetch : Set Int
+    { stories : List Story
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { stories = Dict.empty, topIds = [], fetched = Set.empty, toFetch = Set.empty }, getTopStories )
-
-
-storiesPerPage =
-    10
-
-
-totalToFetch =
-    50
+    ( { stories = [] }, getTopStories )
 
 
 
@@ -58,8 +52,7 @@ totalToFetch =
 
 
 type Msg
-    = GotTopStories (Result Http.Error (List Int))
-    | GotStory (Result Http.Error Story)
+    = GotTopStories (Result (Graphql.Http.Error (List Story)) (List Story))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -67,47 +60,8 @@ update msg model =
     case msg of
         GotTopStories response ->
             case response of
-                Ok storyIds ->
-                    let
-                        topIds =
-                            storyIds |> List.take totalToFetch
-
-                        fetched =
-                            topIds
-                                |> List.take storiesPerPage
-
-                        toFetch =
-                            topIds
-                                |> List.drop storiesPerPage
-                    in
-                    ( { model | topIds = topIds, toFetch = Set.fromList toFetch }
-                    , fetched
-                        |> List.map getStoryById
-                        |> Cmd.batch
-                    )
-
-                Err _ ->
-                    ( model, Cmd.none )
-
-        GotStory response ->
-            case response of
-                Ok story ->
-                    case model.toFetch |> Set.toList |> List.head of
-                        Just toFetch ->
-                            ( { model
-                                | stories = Dict.insert story.id story model.stories
-                                , fetched = Set.insert story.id model.fetched
-                                , toFetch = Set.remove toFetch model.toFetch
-                              }
-                            , getStoryById toFetch
-                            )
-
-                        Nothing ->
-                            ( { model
-                                | stories = Dict.insert story.id story model.stories
-                              }
-                            , Cmd.none
-                            )
+                Ok stories ->
+                    ( { model | stories = stories }, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -200,8 +154,7 @@ viewStories model =
         [ css []
         ]
     <|
-        (model.topIds
-            |> List.filterMap (\i -> Dict.get i model.stories)
+        (model.stories
             |> List.indexedMap
                 (\i story ->
                     li [ css [ py_2, text_sm ] ]
@@ -250,35 +203,16 @@ type alias Story =
 
 getTopStories : Cmd Msg
 getTopStories =
-    Http.get
-        { url = "https://hacker-news.firebaseio.com/v0/topstories.json"
-        , expect = Http.expectJson GotTopStories (JD.list JD.int)
-        }
-
-
-getStoryById : Int -> Cmd Msg
-getStoryById id =
-    Http.get
-        { url = "https://hacker-news.firebaseio.com/v0/item/" ++ String.fromInt id ++ ".json"
-        , expect = Http.expectJson GotStory storyDecoder
-        }
-
-
-storyDecoder : JD.Decoder Story
-storyDecoder =
-    JD.map3 Story
-        (JD.field "id" JD.int)
-        (JD.field "title" JD.string)
-        (JD.field "url"
-            (JD.string
-                |> JD.andThen
-                    (\urlString ->
-                        case Url.fromString urlString of
-                            Just url ->
-                                JD.succeed (Just url)
-
-                            Nothing ->
-                                JD.succeed Nothing
+    Query.topStories identity
+        (SelectionSet.succeed Story
+            |> with Story.id
+            |> with Story.title
+            |> with
+                (SelectionSet.map
+                    (Maybe.withDefault ""
+                        >> Url.fromString
                     )
-            )
+                    Story.url
+                )
         )
+        |> Api.makeRequest GotTopStories
