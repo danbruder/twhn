@@ -10,7 +10,8 @@
   "scripts": {
     "start": "elm-spa server",
     "build": "elm-spa build",
-    "api": "elm-graphql https://dawn-forest-4900.fly.dev --base Juniper"
+    "api": "elm-graphql https://dawn-forest-4900.fly.dev --base Juniper",
+    "api:local": "elm-graphql http://localhost:8000 --base Juniper"
 
   },
   "devDependencies": {

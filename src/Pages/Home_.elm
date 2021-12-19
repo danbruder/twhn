@@ -4,14 +4,15 @@ import Api
 import Css
 import Css.Global
 import Dict exposing (Dict)
+import Domain exposing (Story)
 import Gen.Params.Home_ exposing (Params)
+import Gen.Route as Route exposing (Route)
 import Graphql.Http
 import Graphql.OptionalArgument as OptionalArgument exposing (..)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, with)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
 import Http
-import Json.Decode as JD
 import Juniper.Object.Story as Story
 import Juniper.Query as Query
 import Page
@@ -20,6 +21,7 @@ import Set exposing (Set)
 import Shared
 import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw exposing (..)
+import Ui
 import Url exposing (Url)
 import View exposing (View)
 
@@ -86,63 +88,14 @@ view model =
     { title = "TWHN"
     , body =
         [ Html.toUnstyled <|
-            body model
+            Ui.layout
+                { title = "Home"
+                , children =
+                    [ viewStories model ]
+                , backRoute = Nothing
+                }
         ]
     }
-
-
-body : Model -> Html msg
-body model =
-    div
-        [ css
-            [ max_w_7xl
-            , mx_auto
-            , Breakpoints.lg
-                [ px_8
-                ]
-            ]
-        ]
-        [ Css.Global.global Tw.globalStyles
-        , div [ css [ flex ] ]
-            [ div
-                [ css [ mx_auto, Tw.hidden, Breakpoints.lg [ block ] ] ]
-                [ viewMainMenu ]
-            , div
-                [ css [ max_w_4xl, mx_auto, flex_grow ] ]
-                [ div [ css [ p_4, border_t, border_r, border_l, border_gray_200 ] ] [ h1 [ css [ font_bold, text_xl ] ] [ text "Home" ] ]
-                , div [ css [ p_4, border, border_gray_200 ] ] [ viewStories model ]
-                ]
-            , div
-                [ css [ mx_auto, Tw.hidden, Breakpoints.lg [ block ] ] ]
-                [ viewSidebar ]
-            ]
-        ]
-
-
-viewMainMenu : Html msg
-viewMainMenu =
-    div
-        [ css
-            [ p_4
-            ]
-        ]
-        [ div
-            [ css
-                [ border_0
-                , w_8
-                , h_8
-                ]
-            ]
-            [ img [ css [ rounded_full ], src "/logo.png" ] []
-            ]
-        ]
-
-
-viewSidebar : Html msg
-viewSidebar =
-    div []
-        [ text ""
-        ]
 
 
 viewStories : Model -> Html msg
@@ -168,20 +121,23 @@ viewStories model =
                                 [ css
                                     [ font_bold
                                     , mr_2
-                                    , if story.url == Nothing then
-                                        block
-
-                                      else
-                                        underline
                                     ]
-                                , href (story.url |> Maybe.map Url.toString |> Maybe.withDefault "")
-                                , target "blank"
                                 ]
-                                [ text story.title
+                                [ Ui.viewLink story.title
+                                    (Route.Items__Id_
+                                        { id =
+                                            String.fromInt story.id
+                                        }
+                                    )
                                 ]
                             , case story.url of
                                 Just url ->
-                                    div [ css [ text_gray_500, font_light ] ] [ url.host |> text ]
+                                    a
+                                        [ href (story.url |> Maybe.map Url.toString |> Maybe.withDefault "")
+                                        , css [ block, text_gray_500, font_light ]
+                                        ]
+                                        [ url.host |> text
+                                        ]
 
                                 Nothing ->
                                     span [] []
@@ -189,13 +145,6 @@ viewStories model =
                         ]
                 )
         )
-
-
-type alias Story =
-    { id : Int
-    , title : String
-    , url : Maybe Url
-    }
 
 
 

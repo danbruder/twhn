@@ -42,3 +42,15 @@ topStories fillInOptionals____ object____ =
                 |> List.filterMap Basics.identity
     in
     Object.selectionForCompositeField "topStories" optionalArgs____ object____ (Basics.identity >> Decode.list)
+
+
+type alias StoryByIdRequiredArguments =
+    { id : Int }
+
+
+storyById :
+    StoryByIdRequiredArguments
+    -> SelectionSet decodesTo Juniper.Object.Story
+    -> SelectionSet decodesTo RootQuery
+storyById requiredArgs____ object____ =
+    Object.selectionForCompositeField "storyById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ Basics.identity
