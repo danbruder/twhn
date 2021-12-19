@@ -96,10 +96,6 @@ body model =
         [ css
             [ max_w_7xl
             , mx_auto
-            , px_4
-            , Breakpoints.sm
-                [ px_6
-                ]
             , Breakpoints.lg
                 [ px_8
                 ]
