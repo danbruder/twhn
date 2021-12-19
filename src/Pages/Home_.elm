@@ -6,6 +6,7 @@ import Css.Global
 import Dict exposing (Dict)
 import Gen.Params.Home_ exposing (Params)
 import Graphql.Http
+import Graphql.OptionalArgument as OptionalArgument exposing (..)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, with)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
@@ -153,34 +154,38 @@ viewStories model =
         (model.stories
             |> List.indexedMap
                 (\i story ->
-                    li [ css [ py_2, text_sm ] ]
-                        [ a
-                            [ css
-                                [ font_bold
-                                , mr_2
-                                , if story.url == Nothing then
-                                    block
-
-                                  else
-                                    underline
-                                ]
-                            , href (story.url |> Maybe.map Url.toString |> Maybe.withDefault "")
-                            , target "blank"
-                            ]
+                    li [ css [ py_2, text_sm, flex ] ]
+                        [ span [ css [ w_6 ] ]
                             [ [ String.fromInt (i + 1)
                               , "."
                               , " "
-                              , story.title
                               ]
                                 |> String.join ""
                                 |> text
                             ]
-                        , case story.url of
-                            Just url ->
-                                span [ css [ text_gray_500, font_light ] ] [ [ "(", url.host, ")" ] |> String.join "" |> text ]
+                        , div []
+                            [ a
+                                [ css
+                                    [ font_bold
+                                    , mr_2
+                                    , if story.url == Nothing then
+                                        block
 
-                            Nothing ->
-                                span [] []
+                                      else
+                                        underline
+                                    ]
+                                , href (story.url |> Maybe.map Url.toString |> Maybe.withDefault "")
+                                , target "blank"
+                                ]
+                                [ text story.title
+                                ]
+                            , case story.url of
+                                Just url ->
+                                    div [ css [ text_gray_500, font_light ] ] [ url.host |> text ]
+
+                                Nothing ->
+                                    span [] []
+                            ]
                         ]
                 )
         )
@@ -199,7 +204,12 @@ type alias Story =
 
 getTopStories : Cmd Msg
 getTopStories =
-    Query.topStories identity
+    Query.topStories
+        (\optionals ->
+            { optionals
+                | limit = Present 10
+            }
+        )
         (SelectionSet.succeed Story
             |> with Story.id
             |> with Story.title
