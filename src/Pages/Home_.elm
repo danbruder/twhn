@@ -108,43 +108,37 @@ viewStories model =
             |> List.indexedMap
                 (\i story ->
                     li [ css [ pt_4, px_2, pl_3, text_sm, flex ] ]
-                        [ span [ css [ w_6, flex_shrink_0, text_gray_500 ] ]
-                            [ [ String.fromInt (i + 1)
-                              , "."
-                              , " "
-                              ]
-                                |> String.join ""
-                                |> text
-                            ]
+                        [ span [ css [ w_6, flex_shrink_0, text_gray_500 ] ] [ [ String.fromInt (i + 1), ".", " " ] |> String.join "" |> text ]
                         , div []
-                            [ a
-                                [ css
-                                    [ font_bold
-                                    , mr_2
-                                    ]
+                            [ div [ css [ font_bold, mr_2 ] ]
+                                [ Ui.viewLink story.title (Route.Items__Id_ { id = String.fromInt story.id })
                                 ]
-                                [ Ui.viewLink story.title
-                                    (Route.Items__Id_
-                                        { id =
-                                            String.fromInt story.id
-                                        }
-                                    )
+                            , div [ css [ flex, items_center, text_xs, text_gray_500 ] ]
+                                [ span [ css [ mr_1 ] ] [ story.url |> Maybe.map viewUrl |> Maybe.withDefault (text "") ]
+                                , span [ css [ mr_1 ] ] [ text "·" ]
+                                , span [ css [ mr_1 ] ] [ text story.humanTime ]
+                                , span [ css [ mr_1 ] ] [ text "by" ]
+                                , span [ css [ mr_1 ] ] [ story.by ]
                                 ]
-                            , case story.url of
-                                Just url ->
-                                    a
-                                        [ href (story.url |> Maybe.map Url.toString |> Maybe.withDefault "")
-                                        , css [ block, text_gray_500, font_light, underline ]
-                                        ]
-                                        [ url.host |> text
-                                        ]
-
-                                Nothing ->
-                                    span [] []
                             ]
                         ]
                 )
         )
+
+
+viewUrl : Url -> Html msg
+viewUrl url =
+    a
+        [ href (url |> Url.toString)
+        , css
+            [ block
+            , text_gray_500
+            , font_light
+            , underline
+            ]
+        ]
+        [ url.host |> text
+        ]
 
 
 
@@ -162,14 +156,10 @@ getTopStories =
         (SelectionSet.succeed Story
             |> with Story.id
             |> with Story.title
-            |> with
-                (SelectionSet.map
-                    (Maybe.withDefault ""
-                        >> Url.fromString
-                    )
-                    Story.url
-                )
-            |> hardcoded
-                []
+            |> with (SelectionSet.map (Maybe.withDefault "" >> Url.fromString) Story.url)
+            |> hardcoded []
+            |> with Story.by
+            |> with Story.score
+            |> with Story.humanTime
         )
         |> Api.makeRequest GotTopStories

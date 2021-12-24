@@ -8,10 +8,15 @@ type alias Story =
     , title : String
     , url : Maybe Url
     , comments : List Comment
+    , by : String
+    , score : Int
+    , humanTime : String
     }
 
 
 type alias Comment =
     { id : Int
     , text : String
+    , by : String
+    , humanTime : String
     }

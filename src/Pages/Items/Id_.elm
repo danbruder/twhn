@@ -168,19 +168,18 @@ getStory id =
         (SelectionSet.succeed Story
             |> with Story.id
             |> with Story.title
-            |> with
-                (SelectionSet.map
-                    (Maybe.withDefault ""
-                        >> Url.fromString
-                    )
-                    Story.url
-                )
+            |> with (SelectionSet.map (Maybe.withDefault "" >> Url.fromString) Story.url)
             |> with
                 (Story.comments
                     (SelectionSet.succeed Comment
                         |> with Comment.id
                         |> with Comment.safeText
+                        |> with Comment.by
+                        |> with Comment.humanTime
                     )
                 )
+            |> with Story.by
+            |> with Story.score
+            |> with Story.humanTime
         )
         |> Api.makeRequest GotStory

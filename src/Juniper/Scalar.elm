@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Juniper.Scalar exposing (Codecs, Id(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
+module Juniper.Scalar exposing (Codecs, DateTime(..), Id(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
 
 import Graphql.Codec exposing (Codec)
 import Graphql.Internal.Builder.Object as Object
@@ -11,44 +11,59 @@ import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 
 
+type DateTime
+    = DateTime String
+
+
 type Id
     = Id String
 
 
 defineCodecs :
-    { codecId : Codec valueId }
-    -> Codecs valueId
+    { codecDateTime : Codec valueDateTime
+    , codecId : Codec valueId
+    }
+    -> Codecs valueDateTime valueId
 defineCodecs definitions =
     Codecs definitions
 
 
 unwrapCodecs :
-    Codecs valueId
-    -> { codecId : Codec valueId }
+    Codecs valueDateTime valueId
+    ->
+        { codecDateTime : Codec valueDateTime
+        , codecId : Codec valueId
+        }
 unwrapCodecs (Codecs unwrappedCodecs) =
     unwrappedCodecs
 
 
 unwrapEncoder :
-    (RawCodecs valueId -> Codec getterValue)
-    -> Codecs valueId
+    (RawCodecs valueDateTime valueId -> Codec getterValue)
+    -> Codecs valueDateTime valueId
     -> getterValue
     -> Graphql.Internal.Encode.Value
 unwrapEncoder getter (Codecs unwrappedCodecs) =
     (unwrappedCodecs |> getter |> .encoder) >> Graphql.Internal.Encode.fromJson
 
 
-type Codecs valueId
-    = Codecs (RawCodecs valueId)
+type Codecs valueDateTime valueId
+    = Codecs (RawCodecs valueDateTime valueId)
 
 
-type alias RawCodecs valueId =
-    { codecId : Codec valueId }
+type alias RawCodecs valueDateTime valueId =
+    { codecDateTime : Codec valueDateTime
+    , codecId : Codec valueId
+    }
 
 
-defaultCodecs : RawCodecs Id
+defaultCodecs : RawCodecs DateTime Id
 defaultCodecs =
-    { codecId =
+    { codecDateTime =
+        { encoder = \(DateTime raw) -> Encode.string raw
+        , decoder = Object.scalarDecoder |> Decode.map DateTime
+        }
+    , codecId =
         { encoder = \(Id raw) -> Encode.string raw
         , decoder = Object.scalarDecoder |> Decode.map Id
         }

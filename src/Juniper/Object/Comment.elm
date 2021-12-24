@@ -56,9 +56,9 @@ text =
 
 {-| Creation date of the item, in Unix Time.
 -}
-time : SelectionSet Int Juniper.Object.Comment
+time : SelectionSet Juniper.ScalarCodecs.DateTime Juniper.Object.Comment
 time =
-    Object.selectionForField "Int" "time" [] Decode.int
+    Object.selectionForField "ScalarCodecs.DateTime" "time" [] (Juniper.ScalarCodecs.codecs |> Juniper.Scalar.unwrapCodecs |> .codecDateTime |> .decoder)
 
 
 itemUrl : SelectionSet String Juniper.Object.Comment
@@ -76,3 +76,8 @@ comments object____ =
 safeText : SelectionSet String Juniper.Object.Comment
 safeText =
     Object.selectionForField "String" "safeText" [] Decode.string
+
+
+humanTime : SelectionSet String Juniper.Object.Comment
+humanTime =
+    Object.selectionForField "String" "humanTime" [] Decode.string

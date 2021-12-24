@@ -8,12 +8,17 @@ import Json.Decode as Decode exposing (Decoder)
 import Juniper.Scalar exposing (defaultCodecs)
 
 
+type alias DateTime =
+    Juniper.Scalar.DateTime
+
+
 type alias Id =
     Juniper.Scalar.Id
 
 
-codecs : Juniper.Scalar.Codecs Id
+codecs : Juniper.Scalar.Codecs DateTime Id
 codecs =
     Juniper.Scalar.defineCodecs
-        { codecId = defaultCodecs.codecId
+        { codecDateTime = defaultCodecs.codecDateTime
+        , codecId = defaultCodecs.codecId
         }
