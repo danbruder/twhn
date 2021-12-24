@@ -43,7 +43,15 @@ layout config =
                     [ css [ mx_auto, Tw.hidden, Breakpoints.lg [ block ] ] ]
                     [ viewMainMenu ]
                 , div
-                    [ css [ max_w_4xl, mx_auto, flex_grow ] ]
+                    [ css
+                        [ Tw.w_full
+                        , Breakpoints.lg
+                            [ max_w_4xl
+                            ]
+                        , mx_auto
+                        , flex_grow
+                        ]
+                    ]
                     [ div
                         [ css
                             [ p_4

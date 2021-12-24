@@ -114,8 +114,15 @@ viewStories model =
                                 [ Ui.viewLink story.title (Route.Items__Id_ { id = String.fromInt story.id })
                                 ]
                             , div [ css [ flex, items_center, text_xs, text_gray_500 ] ]
-                                [ span [ css [ mr_1 ] ] [ story.url |> Maybe.map viewUrl |> Maybe.withDefault (text "") ]
-                                , span [ css [ mr_1 ] ] [ text "·" ]
+                                [ story.url
+                                    |> Maybe.map
+                                        (\url ->
+                                            span [ css [ flex, items_center ] ]
+                                                [ span [ css [ mr_1 ] ] [ viewUrl url ]
+                                                , span [ css [ mr_1 ] ] [ text "·" ]
+                                                ]
+                                        )
+                                    |> Maybe.withDefault (text "")
                                 , span [ css [ mr_1 ] ] [ text story.humanTime ]
                                 , span [ css [ mr_1 ] ] [ text "by" ]
                                 , span [ css [] ] [ text story.by ]
