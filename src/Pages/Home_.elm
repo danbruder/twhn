@@ -111,7 +111,7 @@ viewStories model =
                         [ span [ css [ w_6, flex_shrink_0, text_gray_500 ] ] [ [ String.fromInt (i + 1), ".", " " ] |> String.join "" |> text ]
                         , div []
                             [ div [ css [ font_bold, mr_2 ] ]
-                                [ Ui.viewLink story.title (Route.Items__Id_ { id = String.fromInt story.id })
+                                [ Ui.viewLink story.title (Route.Stories__Id_ { id = String.fromInt story.id })
                                 ]
                             , div [ css [ flex, items_center, text_xs, text_gray_500 ] ]
                                 [ story.url

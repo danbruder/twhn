@@ -1,4 +1,4 @@
-module Pages.Items.Id_ exposing (Model, Msg, page)
+module Pages.Stories.Id_ exposing (Model, Msg, page)
 
 import Api
 import Domain exposing (Comment, Story)
@@ -90,7 +90,7 @@ view model =
     , body =
         [ Html.toUnstyled <|
             Ui.layout
-                { title = "Item"
+                { title = "Story"
                 , children = [ viewBody model ]
                 , backRoute = Just Route.Home_
                 }
@@ -127,7 +127,7 @@ viewStory story =
                 [ story.url
                     |> Maybe.map
                         (\url ->
-                            span []
+                            span [ css [ flex, items_center ] ]
                                 [ span [ css [ mr_1 ] ] [ viewUrl url ]
                                 , span [ css [ mr_1 ] ] [ text "·" ]
                                 ]
