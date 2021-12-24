@@ -2,7 +2,7 @@ module Pages.Stories.Id_ exposing (Model, Msg, page)
 
 import Api
 import Domain exposing (..)
-import Gen.Params.Items.Id_ exposing (Params)
+import Gen.Params.Stories.Id_ exposing (Params)
 import Gen.Route as Route exposing (Route)
 import Graphql.Http
 import Graphql.OptionalArgument as OptionalArgument exposing (..)
