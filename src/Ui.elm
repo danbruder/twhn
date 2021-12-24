@@ -69,7 +69,17 @@ layout config =
                                     ]
 
                             Nothing ->
-                                text ""
+                                div
+                                    [ css
+                                        [ w_6
+                                        , block
+                                        , mr_2
+                                        , Breakpoints.lg
+                                            [ Tw.hidden
+                                            ]
+                                        ]
+                                    ]
+                                    [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
                         , h1
                             [ css [ font_bold, text_xl ]
                             ]

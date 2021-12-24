@@ -157,7 +157,7 @@ viewUrl url =
 
 viewComment : Comment -> Html msg
 viewComment comment =
-    div []
+    div [ class "rendered-comment" ]
         (Util.textHtml comment.text)
 
 

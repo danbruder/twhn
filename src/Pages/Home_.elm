@@ -107,8 +107,8 @@ viewStories model =
         (model.stories
             |> List.indexedMap
                 (\i story ->
-                    li [ css [ py_2, text_sm, flex ] ]
-                        [ span [ css [ w_6 ] ]
+                    li [ css [ pt_4, px_2, pl_3, text_sm, flex ] ]
+                        [ span [ css [ w_6, flex_shrink_0, text_gray_500 ] ]
                             [ [ String.fromInt (i + 1)
                               , "."
                               , " "
