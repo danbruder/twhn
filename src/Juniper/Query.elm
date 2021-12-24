@@ -54,3 +54,15 @@ storyById :
     -> SelectionSet (Maybe decodesTo) RootQuery
 storyById requiredArgs____ object____ =
     Object.selectionForCompositeField "storyById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ (Basics.identity >> Decode.nullable)
+
+
+type alias CommentByIdRequiredArguments =
+    { id : Int }
+
+
+commentById :
+    CommentByIdRequiredArguments
+    -> SelectionSet decodesTo Juniper.Object.Comment
+    -> SelectionSet (Maybe decodesTo) RootQuery
+commentById requiredArgs____ object____ =
+    Object.selectionForCompositeField "commentById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ (Basics.identity >> Decode.nullable)

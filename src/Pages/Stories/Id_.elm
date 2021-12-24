@@ -1,12 +1,12 @@
 module Pages.Stories.Id_ exposing (Model, Msg, page)
 
 import Api
-import Domain exposing (Comment, Story)
+import Domain exposing (..)
 import Gen.Params.Items.Id_ exposing (Params)
 import Gen.Route as Route exposing (Route)
 import Graphql.Http
 import Graphql.OptionalArgument as OptionalArgument exposing (..)
-import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, with)
+import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, hardcoded, with)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
 import Juniper.Object.Comment as Comment
@@ -170,13 +170,13 @@ viewUrl url =
 
 
 viewComment : Comment -> Html msg
-viewComment comment =
+viewComment (Comment comment) =
     div []
         [ div [ css [ flex, items_center, pb_2 ] ]
             [ h2 [ css [ font_bold, mr_1 ] ]
                 [ text comment.by ]
             , span [ css [] ]
-                [ text comment.humanTime
+                [ Ui.viewLink comment.humanTime (Route.Comments__Id_ { id = String.fromInt comment.id })
                 ]
             ]
         , div
@@ -195,11 +195,13 @@ getStory id =
             |> with (SelectionSet.map (Maybe.withDefault "" >> Url.fromString) Story.url)
             |> with
                 (Story.comments
-                    (SelectionSet.succeed Comment
+                    (SelectionSet.succeed newComment
                         |> with Comment.id
                         |> with Comment.safeText
                         |> with Comment.by
                         |> with Comment.humanTime
+                        |> hardcoded []
+                        |> with Comment.parent
                     )
                 )
             |> with Story.by
