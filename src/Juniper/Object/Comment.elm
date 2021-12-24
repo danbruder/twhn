@@ -28,9 +28,9 @@ id =
 
 {-| The username of the item's author.
 -}
-by : SelectionSet (Maybe String) Juniper.Object.Comment
+by : SelectionSet String Juniper.Object.Comment
 by =
-    Object.selectionForField "(Maybe String)" "by" [] (Decode.string |> Decode.nullable)
+    Object.selectionForField "String" "by" [] Decode.string
 
 
 {-| The ids of the item's comments, in ranked display order.

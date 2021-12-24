@@ -75,7 +75,7 @@ layout config =
                             ]
                             [ text config.title ]
                         ]
-                    , div [ css [ p_4, border, border_gray_200 ] ] config.children
+                    , div [ css [ border, border_gray_200 ] ] config.children
                     ]
                 ]
             , div

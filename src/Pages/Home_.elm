@@ -9,7 +9,7 @@ import Gen.Params.Home_ exposing (Params)
 import Gen.Route as Route exposing (Route)
 import Graphql.Http
 import Graphql.OptionalArgument as OptionalArgument exposing (..)
-import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, with)
+import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, hardcoded, with)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
 import Http
@@ -169,5 +169,7 @@ getTopStories =
                     )
                     Story.url
                 )
+            |> hardcoded
+                []
         )
         |> Api.makeRequest GotTopStories

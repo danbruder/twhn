@@ -7,18 +7,11 @@ type alias Story =
     { id : Int
     , title : String
     , url : Maybe Url
+    , comments : List Comment
     }
 
 
 type alias Comment =
     { id : Int
     , text : String
-    }
-
-
-type alias StoryWithComments =
-    { id : Int
-    , title : String
-    , url : Maybe Url
-    , comments : List Comment
     }

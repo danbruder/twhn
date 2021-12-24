@@ -1,7 +1,7 @@
 module Pages.Items.Id_ exposing (Model, Msg, page)
 
 import Api
-import Domain exposing (Comment, Story, StoryWithComments)
+import Domain exposing (Comment, Story)
 import Gen.Params.Items.Id_ exposing (Params)
 import Gen.Route as Route exposing (Route)
 import Graphql.Http
@@ -18,7 +18,8 @@ import Shared
 import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw exposing (..)
 import Ui
-import Url
+import Url exposing (Url)
+import Util
 import View exposing (View)
 
 
@@ -37,7 +38,7 @@ page shared req =
 
 
 type alias Model =
-    { story : Maybe StoryWithComments }
+    { story : Maybe Story }
 
 
 init : String -> ( Model, Cmd Msg )
@@ -55,7 +56,7 @@ init idStr =
 
 
 type Msg
-    = GotStory (Result (Graphql.Http.Error (Maybe StoryWithComments)) (Maybe StoryWithComments))
+    = GotStory (Result (Graphql.Http.Error (Maybe Story)) (Maybe Story))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -90,95 +91,80 @@ view model =
         [ Html.toUnstyled <|
             Ui.layout
                 { title = "Item"
-                , children =
-                    [ viewStory model ]
+                , children = [ viewBody model ]
                 , backRoute = Just Route.Home_
                 }
         ]
     }
 
 
-viewStory : Model -> Html msg
-viewStory model =
+viewBody : Model -> Html msg
+viewBody model =
     case model.story of
         Just story ->
-            div [ css [ py_2, text_sm, flex ] ]
-                [ div []
-                    [ a
-                        [ css
-                            [ font_bold
-                            , mr_2
-                            ]
-                        ]
-                        [ Ui.viewLink story.title
-                            (Route.Items__Id_
-                                { id =
-                                    String.fromInt story.id
-                                }
-                            )
-                        ]
-                    , case story.url of
-                        Just url ->
-                            a
-                                [ href (story.url |> Maybe.map Url.toString |> Maybe.withDefault "")
-                                , css [ block, text_gray_500, font_light, underline ]
-                                ]
-                                [ url.host |> text
-                                ]
-
-                        Nothing ->
-                            span [] []
-                    , div []
-                        [ ul [] <|
-                            (story.comments
-                                |> List.map viewComment
-                                |> List.map
-                                    (\a ->
-                                        li
-                                            [ css
-                                                [ border_t
-                                                , border_gray_200
-                                                , py_2
-                                                ]
-                                            ]
-                                            [ a ]
-                                    )
-                            )
-                        ]
-                    ]
-                ]
+            viewStory story
 
         Nothing ->
             div [] []
 
 
-viewComment : Comment -> Html msg
-viewComment comment =
-    div [ css [] ]
-        [ div []
-            [ text comment.text
+sectionCss =
+    [ p_4
+    , border_b
+    , border_gray_200
+    ]
+
+
+viewStory : Story -> Html msg
+viewStory story =
+    div [ css [ text_sm ] ]
+        [ div
+            [ css sectionCss
+            ]
+            [ h1 [ css [ font_bold ] ] [ story.title |> text ]
+            , story.url |> Maybe.map viewUrl |> Maybe.withDefault (text "")
+            ]
+        , div []
+            [ ul [] <|
+                (story.comments
+                    |> List.map viewComment
+                    |> List.map
+                        (\item ->
+                            li
+                                []
+                                [ item ]
+                        )
+                )
             ]
         ]
 
 
+viewUrl : Url -> Html msg
+viewUrl url =
+    a
+        [ href (url |> Url.toString)
+        , css
+            [ block
+            , text_gray_500
+            , font_light
+            , underline
+            ]
+        ]
+        [ url.host |> text
+        ]
+
+
+viewComment : Comment -> Html msg
+viewComment comment =
+    div []
+        (Util.textHtml comment.text)
+
+
 getStory : Int -> Cmd Msg
 getStory id =
-    let
-        storySelection =
-            SelectionSet.succeed Story
-                |> with Story.id
-                |> with Story.title
-                |> with
-                    (SelectionSet.map
-                        (Maybe.withDefault ""
-                            >> Url.fromString
-                        )
-                        Story.url
-                    )
-    in
     Query.storyById
         { id = id }
-        (SelectionSet.succeed StoryWithComments
+        (SelectionSet.succeed Story
             |> with Story.id
             |> with Story.title
             |> with
