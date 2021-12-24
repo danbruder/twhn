@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Juniper.Object.Story exposing (..)
+module Juniper.Object.Comment exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -21,69 +21,48 @@ import Juniper.Union
 
 {-| The item's unique id.
 -}
-id : SelectionSet Int Juniper.Object.Story
+id : SelectionSet Int Juniper.Object.Comment
 id =
     Object.selectionForField "Int" "id" [] Decode.int
 
 
-{-| The total comment count.
--}
-descendants : SelectionSet Int Juniper.Object.Story
-descendants =
-    Object.selectionForField "Int" "descendants" [] Decode.int
-
-
 {-| The username of the item's author.
 -}
-by : SelectionSet String Juniper.Object.Story
+by : SelectionSet (Maybe String) Juniper.Object.Comment
 by =
-    Object.selectionForField "String" "by" [] Decode.string
+    Object.selectionForField "(Maybe String)" "by" [] (Decode.string |> Decode.nullable)
 
 
 {-| The ids of the item's comments, in ranked display order.
 -}
-kids : SelectionSet (Maybe (List Int)) Juniper.Object.Story
+kids : SelectionSet (Maybe (List Int)) Juniper.Object.Comment
 kids =
     Object.selectionForField "(Maybe (List Int))" "kids" [] (Decode.int |> Decode.list |> Decode.nullable)
 
 
-{-| The story's score.
+{-| The comment's parent: either another comment or the relevant story.
 -}
-score : SelectionSet Int Juniper.Object.Story
-score =
-    Object.selectionForField "Int" "score" [] Decode.int
+parent : SelectionSet Int Juniper.Object.Comment
+parent =
+    Object.selectionForField "Int" "parent" [] Decode.int
 
 
-{-| The title of the story.
+{-| The comment text. HTML.
 -}
-title : SelectionSet String Juniper.Object.Story
-title =
-    Object.selectionForField "String" "title" [] Decode.string
-
-
-{-| The URL of the story.
--}
-url : SelectionSet (Maybe String) Juniper.Object.Story
-url =
-    Object.selectionForField "(Maybe String)" "url" [] (Decode.string |> Decode.nullable)
-
-
-{-| The story text. HTML.
--}
-text : SelectionSet (Maybe String) Juniper.Object.Story
+text : SelectionSet String Juniper.Object.Comment
 text =
-    Object.selectionForField "(Maybe String)" "text" [] (Decode.string |> Decode.nullable)
+    Object.selectionForField "String" "text" [] Decode.string
 
 
 {-| Creation date of the item, in Unix Time.
 -}
-time : SelectionSet Int Juniper.Object.Story
+time : SelectionSet Int Juniper.Object.Comment
 time =
     Object.selectionForField "Int" "time" [] Decode.int
 
 
 comments :
     SelectionSet decodesTo Juniper.Object.Comment
-    -> SelectionSet (List decodesTo) Juniper.Object.Story
+    -> SelectionSet (List decodesTo) Juniper.Object.Comment
 comments object____ =
     Object.selectionForCompositeField "comments" [] object____ (Basics.identity >> Decode.list)

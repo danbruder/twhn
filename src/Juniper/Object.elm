@@ -5,5 +5,9 @@
 module Juniper.Object exposing (..)
 
 
+type Comment
+    = Comment
+
+
 type Story
     = Story

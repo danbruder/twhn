@@ -51,6 +51,6 @@ type alias StoryByIdRequiredArguments =
 storyById :
     StoryByIdRequiredArguments
     -> SelectionSet decodesTo Juniper.Object.Story
-    -> SelectionSet decodesTo RootQuery
+    -> SelectionSet (Maybe decodesTo) RootQuery
 storyById requiredArgs____ object____ =
-    Object.selectionForCompositeField "storyById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ Basics.identity
+    Object.selectionForCompositeField "storyById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ (Basics.identity >> Decode.nullable)

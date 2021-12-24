@@ -1,7 +1,7 @@
 module Pages.Items.Id_ exposing (Model, Msg, page)
 
 import Api
-import Domain exposing (Story)
+import Domain exposing (Comment, Story, StoryWithComments)
 import Gen.Params.Items.Id_ exposing (Params)
 import Gen.Route as Route exposing (Route)
 import Graphql.Http
@@ -9,6 +9,7 @@ import Graphql.OptionalArgument as OptionalArgument exposing (..)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, with)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
+import Juniper.Object.Comment as Comment
 import Juniper.Object.Story as Story
 import Juniper.Query as Query
 import Page
@@ -36,7 +37,7 @@ page shared req =
 
 
 type alias Model =
-    { story : Maybe Story }
+    { story : Maybe StoryWithComments }
 
 
 init : String -> ( Model, Cmd Msg )
@@ -54,7 +55,7 @@ init idStr =
 
 
 type Msg
-    = GotStory (Result (Graphql.Http.Error Story) Story)
+    = GotStory (Result (Graphql.Http.Error (Maybe StoryWithComments)) (Maybe StoryWithComments))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -63,7 +64,7 @@ update msg model =
         GotStory response ->
             case response of
                 Ok story ->
-                    ( { model | story = Just story }, Cmd.none )
+                    ( { model | story = story }, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -127,6 +128,23 @@ viewStory model =
 
                         Nothing ->
                             span [] []
+                    , div []
+                        [ ul [] <|
+                            (story.comments
+                                |> List.map viewComment
+                                |> List.map
+                                    (\a ->
+                                        li
+                                            [ css
+                                                [ border_t
+                                                , border_gray_200
+                                                , py_2
+                                                ]
+                                            ]
+                                            [ a ]
+                                    )
+                            )
+                        ]
                     ]
                 ]
 
@@ -134,11 +152,33 @@ viewStory model =
             div [] []
 
 
+viewComment : Comment -> Html msg
+viewComment comment =
+    div [ css [] ]
+        [ div []
+            [ text comment.text
+            ]
+        ]
+
+
 getStory : Int -> Cmd Msg
 getStory id =
+    let
+        storySelection =
+            SelectionSet.succeed Story
+                |> with Story.id
+                |> with Story.title
+                |> with
+                    (SelectionSet.map
+                        (Maybe.withDefault ""
+                            >> Url.fromString
+                        )
+                        Story.url
+                    )
+    in
     Query.storyById
         { id = id }
-        (SelectionSet.succeed Story
+        (SelectionSet.succeed StoryWithComments
             |> with Story.id
             |> with Story.title
             |> with
@@ -147,6 +187,13 @@ getStory id =
                         >> Url.fromString
                     )
                     Story.url
+                )
+            |> with
+                (Story.comments
+                    (SelectionSet.succeed Comment
+                        |> with Comment.id
+                        |> with Comment.text
+                    )
                 )
         )
         |> Api.makeRequest GotStory
