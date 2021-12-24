@@ -118,7 +118,7 @@ viewStories model =
                                 , span [ css [ mr_1 ] ] [ text "·" ]
                                 , span [ css [ mr_1 ] ] [ text story.humanTime ]
                                 , span [ css [ mr_1 ] ] [ text "by" ]
-                                , span [ css [ mr_1 ] ] [ story.by ]
+                                , span [ css [] ] [ text story.by ]
                                 ]
                             ]
                         ]
