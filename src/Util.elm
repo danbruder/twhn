@@ -14,4 +14,5 @@ textHtml t =
                 |> List.map Html.Styled.fromUnstyled
 
         Err _ ->
-            []
+            [ Html.Styled.text "(this failed to parse...)"
+            ]

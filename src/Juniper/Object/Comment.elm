@@ -61,8 +61,18 @@ time =
     Object.selectionForField "Int" "time" [] Decode.int
 
 
+itemUrl : SelectionSet String Juniper.Object.Comment
+itemUrl =
+    Object.selectionForField "String" "itemUrl" [] Decode.string
+
+
 comments :
     SelectionSet decodesTo Juniper.Object.Comment
     -> SelectionSet (List decodesTo) Juniper.Object.Comment
 comments object____ =
     Object.selectionForCompositeField "comments" [] object____ (Basics.identity >> Decode.list)
+
+
+safeText : SelectionSet String Juniper.Object.Comment
+safeText =
+    Object.selectionForField "String" "safeText" [] Decode.string

@@ -131,7 +131,8 @@ viewStory story =
                     |> List.map
                         (\item ->
                             li
-                                []
+                                [ css sectionCss
+                                ]
                                 [ item ]
                         )
                 )
@@ -178,7 +179,7 @@ getStory id =
                 (Story.comments
                     (SelectionSet.succeed Comment
                         |> with Comment.id
-                        |> with Comment.text
+                        |> with Comment.safeText
                     )
                 )
         )
