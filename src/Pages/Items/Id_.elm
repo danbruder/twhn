@@ -122,7 +122,14 @@ viewStory story =
             [ css sectionCss
             ]
             [ h1 [ css [ font_bold ] ] [ story.title |> text ]
-            , story.url |> Maybe.map viewUrl |> Maybe.withDefault (text "")
+            , div
+                [ css [ flex, items_center, text_xs, text_gray_500 ] ]
+                [ span [ css [ mr_1 ] ] [ story.url |> Maybe.map viewUrl |> Maybe.withDefault (text "") ]
+                , span [ css [ mr_1 ] ] [ text "·" ]
+                , span [ css [ mr_1 ] ] [ text story.humanTime ]
+                , span [ css [ mr_1 ] ] [ text "by" ]
+                , span [ css [] ] [ text story.by ]
+                ]
             ]
         , div []
             [ ul [] <|
@@ -157,8 +164,18 @@ viewUrl url =
 
 viewComment : Comment -> Html msg
 viewComment comment =
-    div [ class "rendered-comment" ]
-        (Util.textHtml comment.text)
+    div []
+        [ div [ css [ flex, items_center, pb_2 ] ]
+            [ h2 [ css [ font_bold, mr_1 ] ]
+                [ text comment.by ]
+            , span [ css [] ]
+                [ text comment.humanTime
+                ]
+            ]
+        , div
+            [ class "rendered-comment" ]
+            (Util.textHtml comment.text)
+        ]
 
 
 getStory : Int -> Cmd Msg

@@ -60,7 +60,8 @@ layout config =
                                 div
                                     [ css
                                         [ w_5
-                                        , mr_2
+                                        , mr_1
+                                        , text_gray_500
                                         ]
                                     ]
                                     [ viewIconLink
