@@ -112,31 +112,26 @@ viewStories model =
                             [ div [ css [ font_bold, mr_2 ] ]
                                 [ Ui.viewLink story.title (Route.Stories__Id_ { id = String.fromInt story.id })
                                 ]
-                            , div [ css [ flex, items_center, text_xs, text_gray_500 ] ]
+                            , div
+                                [ css
+                                    [ flex
+                                    , items_center
+                                    , flex_wrap
+                                    , text_xs
+                                    , text_gray_500
+                                    ]
+                                ]
                                 [ story.url
                                     |> Maybe.map
                                         (\url ->
                                             span [ css [ flex, items_center ] ]
                                                 [ span [ css [ mr_1 ] ] [ viewUrl url ]
-                                                , span [ css [ mr_1 ] ] [ text "·" ]
                                                 ]
                                         )
                                     |> Maybe.withDefault (text "")
                                 , span [ css [ mr_1 ] ] [ text story.humanTime ]
                                 , span [ css [ mr_1 ] ] [ text "by" ]
                                 , span [ css [ mr_1 ] ] [ text story.by ]
-                                , if not (List.isEmpty story.kids) then
-                                    span [ css [ flex, items_center ] ]
-                                        [ span [ css [ mr_1 ] ] [ text "·" ]
-                                        , span [ css [ mr_1 ] ]
-                                            [ (List.length story.kids |> String.fromInt)
-                                                ++ " comments"
-                                                |> text
-                                            ]
-                                        ]
-
-                                  else
-                                    text ""
                                 ]
                             ]
                         ]

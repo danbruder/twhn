@@ -122,13 +122,12 @@ viewStory story =
             ]
             [ h1 [ css [ font_bold ] ] [ story.title |> text ]
             , div
-                [ css [ flex, items_center, text_xs, text_gray_500 ] ]
+                [ css [ flex, items_center, flex_wrap, text_xs, text_gray_500 ] ]
                 [ story.url
                     |> Maybe.map
                         (\url ->
                             span [ css [ flex, items_center ] ]
                                 [ span [ css [ mr_1 ] ] [ viewUrl url ]
-                                , span [ css [ mr_1 ] ] [ text "·" ]
                                 ]
                         )
                     |> Maybe.withDefault (text "")
@@ -137,8 +136,7 @@ viewStory story =
                 , span [ css [ mr_1 ] ] [ text story.by ]
                 , if not (List.isEmpty story.kids) then
                     span [ css [ flex, items_center ] ]
-                        [ span [ css [ mr_1 ] ] [ text "·" ]
-                        , span [ css [ mr_1 ] ]
+                        [ span [ css [ mr_1 ] ]
                             [ (List.length story.kids |> String.fromInt)
                                 ++ " comments"
                                 |> text
