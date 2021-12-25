@@ -141,9 +141,22 @@ viewSubComment (Comment comment) =
     div []
         [ div [ css [ flex, items_center, pb_2 ] ]
             [ h2 [ css [ font_bold, mr_1 ] ] [ text comment.by ]
-            , span [ css [] ]
-                [ Ui.viewLink comment.humanTime (Route.Comments__Id_ { id = String.fromInt comment.id })
-                ]
+            , span [ css [ mr_1 ] ] [ text comment.humanTime ]
+            , if not (List.isEmpty comment.kids) then
+                span [ css [ underline, text_gray_500 ] ]
+                    [ Ui.viewLink
+                        (case List.length comment.kids of
+                            1 ->
+                                "(1 reply)"
+
+                            a ->
+                                "(" ++ String.fromInt a ++ " replies)"
+                        )
+                        (Route.Comments__Id_ { id = String.fromInt comment.id })
+                    ]
+
+              else
+                text ""
             ]
         , div
             [ class "rendered-comment" ]
@@ -162,6 +175,7 @@ getComment id =
                 |> with Comment.humanTime
                 |> hardcoded []
                 |> with Comment.parent
+                |> with (SelectionSet.withDefault [] Comment.kids)
     in
     Query.commentById
         { id = id }
@@ -172,5 +186,6 @@ getComment id =
             |> with Comment.humanTime
             |> with (Comment.comments selectionSet)
             |> with Comment.parent
+            |> with (SelectionSet.withDefault [] Comment.kids)
         )
         |> Api.makeRequest GotComment

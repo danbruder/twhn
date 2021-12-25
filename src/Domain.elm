@@ -23,11 +23,12 @@ type Comment
         , humanTime : String
         , comments : List Comment
         , parent : Int
+        , kids : List Int
         }
 
 
-newComment : Int -> String -> String -> String -> List Comment -> Int -> Comment
-newComment id text by humanTime comments parent =
+newComment : Int -> String -> String -> String -> List Comment -> Int -> List Int -> Comment
+newComment id text by humanTime comments parent kids =
     Comment
         { id = id
         , text = text
@@ -35,4 +36,5 @@ newComment id text by humanTime comments parent =
         , humanTime = humanTime
         , comments = comments
         , parent = parent
+        , kids = kids
         }
