@@ -92,7 +92,6 @@ view model =
             Ui.layout
                 { title = "Story"
                 , children = [ viewBody model ]
-                , backRoute = Just Route.Home_
                 }
         ]
     }

@@ -92,13 +92,6 @@ view model =
             Ui.layout
                 { title = "Comment"
                 , children = [ viewBody model ]
-                , backRoute =
-                    model.comment
-                        |> Maybe.map (\(Comment comment) -> comment.parent)
-                        |> Maybe.map
-                            (\parent ->
-                                Route.Stories__Id_ { id = String.fromInt parent }
-                            )
                 }
         ]
     }

@@ -92,7 +92,6 @@ view model =
                 { title = "Home"
                 , children =
                     [ viewStories model ]
-                , backRoute = Nothing
                 }
         ]
     }

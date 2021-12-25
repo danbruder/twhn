@@ -23,7 +23,6 @@ viewIconLink innerHtml route =
 layout :
     { title : String
     , children : List (Html msg)
-    , backRoute : Maybe Route
     }
     -> Html msg
 layout config =
@@ -63,32 +62,18 @@ layout config =
                             , items_center
                             ]
                         ]
-                        [ case config.backRoute of
-                            Just route ->
-                                div
-                                    [ css
-                                        [ w_5
-                                        , mr_1
-                                        , text_gray_500
-                                        ]
+                        [ a
+                            [ Attr.href (Route.toHref Route.Home_)
+                            , css
+                                [ w_6
+                                , block
+                                , mr_2
+                                , Breakpoints.lg
+                                    [ Tw.hidden
                                     ]
-                                    [ viewIconLink
-                                        (Heroicons.Outline.arrowCircleLeft [] |> Html.fromUnstyled)
-                                        route
-                                    ]
-
-                            Nothing ->
-                                div
-                                    [ css
-                                        [ w_6
-                                        , block
-                                        , mr_2
-                                        , Breakpoints.lg
-                                            [ Tw.hidden
-                                            ]
-                                        ]
-                                    ]
-                                    [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
+                                ]
+                            ]
+                            [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
                         , h1
                             [ css [ font_bold, text_xl ]
                             ]

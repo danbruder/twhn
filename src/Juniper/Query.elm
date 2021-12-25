@@ -24,6 +24,38 @@ version =
     Object.selectionForField "String" "version" [] Decode.string
 
 
+type alias TopItemsOptionalArguments =
+    { limit : OptionalArgument Int }
+
+
+topItems :
+    (TopItemsOptionalArguments -> TopItemsOptionalArguments)
+    -> SelectionSet decodesTo Juniper.Union.Item
+    -> SelectionSet (List decodesTo) RootQuery
+topItems fillInOptionals____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { limit = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "limit" filledInOptionals____.limit Encode.int ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "topItems" optionalArgs____ object____ (Basics.identity >> Decode.list)
+
+
+type alias ItemByIdRequiredArguments =
+    { id : Int }
+
+
+itemById :
+    ItemByIdRequiredArguments
+    -> SelectionSet decodesTo Juniper.Union.Item
+    -> SelectionSet (Maybe decodesTo) RootQuery
+itemById requiredArgs____ object____ =
+    Object.selectionForCompositeField "itemById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ (Basics.identity >> Decode.nullable)
+
+
 type alias TopStoriesOptionalArguments =
     { limit : OptionalArgument Int }
 
