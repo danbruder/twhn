@@ -11,6 +11,7 @@ type alias Story =
     , by : String
     , score : Int
     , humanTime : String
+    , kids : List Int
     }
 
 

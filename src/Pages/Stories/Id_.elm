@@ -134,7 +134,19 @@ viewStory story =
                     |> Maybe.withDefault (text "")
                 , span [ css [ mr_1 ] ] [ text story.humanTime ]
                 , span [ css [ mr_1 ] ] [ text "by" ]
-                , span [ css [] ] [ text story.by ]
+                , span [ css [ mr_1 ] ] [ text story.by ]
+                , if not (List.isEmpty story.kids) then
+                    span [ css [ flex, items_center ] ]
+                        [ span [ css [ mr_1 ] ] [ text "·" ]
+                        , span [ css [ mr_1 ] ]
+                            [ (List.length story.kids |> String.fromInt)
+                                ++ " comments"
+                                |> text
+                            ]
+                        ]
+
+                  else
+                    text ""
                 ]
             ]
         , div []
@@ -206,5 +218,6 @@ getStory id =
             |> with Story.by
             |> with Story.score
             |> with Story.humanTime
+            |> with (SelectionSet.withDefault [] Story.kids)
         )
         |> Api.makeRequest GotStory
