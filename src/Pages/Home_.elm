@@ -71,12 +71,22 @@ getTopItems =
         |> Effect.fromCmd
 
 
+getTopItemKids : Effect Msg
+getTopItemKids =
+    Query.topItems
+        (\optionals -> { optionals | limit = Present 30 })
+        Selections.children
+        |> Api.makeRequest GotTopChildren
+        |> Effect.fromCmd
+
+
 
 -- UPDATE
 
 
 type Msg
     = GotTopItems (Result (Graphql.Http.Error (List Item)) (List Item))
+    | GotTopChildren (Result (Graphql.Http.Error (List (List Item))) (List (List Item)))
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -88,6 +98,19 @@ update msg model =
                     ( Loaded items
                     , [ Shared.gotItems items |> Effect.fromShared
                       , Shared.gotTopItems (List.map Item.id items) |> Effect.fromShared
+                      , getTopItemKids
+                      ]
+                        |> Effect.batch
+                    )
+
+                Err _ ->
+                    ( model, Effect.none )
+
+        GotTopChildren response ->
+            case response of
+                Ok items ->
+                    ( model
+                    , [ Shared.gotItems (List.concat items) |> Effect.fromShared
                       ]
                         |> Effect.batch
                     )

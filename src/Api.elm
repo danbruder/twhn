@@ -11,6 +11,5 @@ makeRequest :
     -> Cmd msg
 makeRequest toMsg query =
     query
-        --|> Graphql.Http.queryRequest "https://dawn-forest-4900.fly.dev"
-        |> Graphql.Http.queryRequest "http://localhost:8000"
+        |> Graphql.Http.queryRequest "https://dawn-forest-4900.fly.dev"
         |> Graphql.Http.send toMsg
