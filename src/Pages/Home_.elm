@@ -56,24 +56,19 @@ init shared =
             |> List.filterMap (\id -> Dict.get id shared.items)
     of
         [] ->
-            ( Loading
-            , (Query.topItems
-                (\optionals -> { optionals | limit = Present 30 })
-                Selections.item
-                |> Api.makeRequest GotTopItems
-              )
-                |> Effect.fromCmd
-            )
+            ( Loading, getTopItems )
 
         items ->
-            ( Loaded items
-            , (Query.topItems
-                (\optionals -> { optionals | limit = Present 30 })
-                Selections.item
-                |> Api.makeRequest GotTopItems
-              )
-                |> Effect.fromCmd
-            )
+            ( Loaded items, getTopItems )
+
+
+getTopItems : Effect Msg
+getTopItems =
+    Query.topItems
+        (\optionals -> { optionals | limit = Present 30 })
+        Selections.item
+        |> Api.makeRequest GotTopItems
+        |> Effect.fromCmd
 
 
 

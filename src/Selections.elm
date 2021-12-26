@@ -2,7 +2,7 @@ module Selections exposing (..)
 
 import Api
 import Domain.Comment exposing (Comment)
-import Domain.Item exposing (Item(..))
+import Domain.Item as Item exposing (Item(..))
 import Domain.Story exposing (Story)
 import Effect exposing (Effect)
 import Gen.Params.Comments.Id_ exposing (Params)
@@ -17,7 +17,7 @@ import Juniper.Object.Comment as Comment
 import Juniper.Object.Story as Story
 import Juniper.Query as Query
 import Juniper.Union
-import Juniper.Union.Item as Item
+import Juniper.Union.Item as ItemUnion
 import Page
 import Request
 import Shared
@@ -31,7 +31,7 @@ import View exposing (View)
 
 item : SelectionSet Item Juniper.Union.Item
 item =
-    Item.fragments
+    ItemUnion.fragments
         { onComment =
             SelectionSet.map Item__Comment
                 (SelectionSet.succeed Comment
@@ -53,4 +53,16 @@ item =
                     |> with Story.humanTime
                     |> with (SelectionSet.withDefault [] Story.kids)
                 )
+        }
+
+
+children : SelectionSet (List Item) Juniper.Union.Item
+children =
+    ItemUnion.fragments
+        { onComment =
+            SelectionSet.succeed identity
+                |> with (Comment.children item)
+        , onStory =
+            SelectionSet.succeed identity
+                |> with (Story.children item)
         }

@@ -16,5 +16,25 @@ id item =
         Item__Story story ->
             story.id
 
-        Item__Comment comment ->
-            comment.id
+        Item__Comment c ->
+            c.id
+
+
+kids : Item -> List Int
+kids item =
+    case item of
+        Item__Story story ->
+            story.kids
+
+        Item__Comment c ->
+            c.kids
+
+
+comment : Item -> Maybe Comment
+comment item =
+    case item of
+        Item__Story _ ->
+            Nothing
+
+        Item__Comment c ->
+            Just c

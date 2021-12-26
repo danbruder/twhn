@@ -3,7 +3,7 @@ module Pages.Items.Id_ exposing (Model, Msg, page)
 import Api
 import Dict
 import Domain.Comment exposing (Comment)
-import Domain.Item exposing (Item(..))
+import Domain.Item as Item exposing (Item(..))
 import Domain.Story exposing (Story)
 import Effect exposing (Effect)
 import Gen.Params.Comments.Id_ exposing (Params)
@@ -50,6 +50,7 @@ type Model
     | NotFound
     | Loaded
         { item : Item
+        , children : List Item
         }
 
 
@@ -59,29 +60,54 @@ init shared idStr =
         Just id ->
             case Dict.get id shared.items of
                 Just item ->
-                    ( Loaded { item = item }
-                    , Query.itemById { id = id } Selections.item
-                        |> Api.makeRequest GotItem
-                        |> Effect.fromCmd
+                    let
+                        children =
+                            Item.kids item
+                                |> List.filterMap (\kid -> Dict.get kid shared.items)
+                    in
+                    ( Loaded { item = item, children = children }
+                    , boot id
                     )
 
                 Nothing ->
                     ( Loading
-                    , Query.itemById { id = id } Selections.item
-                        |> Api.makeRequest GotItem
-                        |> Effect.fromCmd
+                    , boot id
                     )
 
         _ ->
             ( NotFound, Effect.none )
 
 
+type alias Response =
+    { item : Maybe Item
+    , children : Maybe (List Item)
+    }
+
+
+boot : Int -> Effect Msg
+boot id =
+    SelectionSet.map2
+        (\maybeItem maybeChildren ->
+            { item = maybeItem
+            , children = maybeChildren
+            }
+        )
+        (Query.itemById { id = id } Selections.item)
+        (Query.itemById { id = id } Selections.children)
+        |> Api.makeRequest GotItem
+        |> Effect.fromCmd
+
+
 
 -- UPDATE
 
 
+type alias Children =
+    Maybe (List Item)
+
+
 type Msg
-    = GotItem (Result (Graphql.Http.Error (Maybe Item)) (Maybe Item))
+    = GotItem (Result (Graphql.Http.Error Response) Response)
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -89,11 +115,15 @@ update msg model =
     case msg of
         GotItem response ->
             case response of
-                Ok (Just item) ->
-                    ( Loaded { item = item }, Effect.none )
+                Ok payload ->
+                    case ( payload.item, payload.children ) of
+                        ( Just item, Just children ) ->
+                            ( Loaded { item = item, children = children }
+                            , Shared.gotItems (item :: children) |> Effect.fromShared
+                            )
 
-                Ok Nothing ->
-                    ( NotFound, Effect.none )
+                        _ ->
+                            ( NotFound, Effect.none )
 
                 Err _ ->
                     ( model, Effect.none )
@@ -131,8 +161,8 @@ viewBody model =
         Loading ->
             div [] [ text "loading..." ]
 
-        Loaded { item } ->
-            viewItem item
+        Loaded { item, children } ->
+            viewItem item children
 
         NotFound ->
             div [] [ text "not found" ]
@@ -145,18 +175,19 @@ sectionCss =
     ]
 
 
-viewItem : Item -> Html msg
-viewItem item =
+viewItem : Item -> List Item -> Html msg
+viewItem item children =
     case item of
         Item__Story story ->
             viewStory story
+                (children |> List.filterMap Item.comment)
 
         Item__Comment comment ->
             viewComment comment
 
 
-viewStory : Story -> Html msg
-viewStory story =
+viewStory : Story -> List Comment -> Html msg
+viewStory story comments =
     div [ css [ text_sm ] ]
         [ div
             [ css sectionCss
@@ -190,17 +221,16 @@ viewStory story =
             ]
         , div []
             [ ul [] <|
-                -- (story.comments
-                --     |> List.map viewComment
-                --     |> List.map
-                --         (\item ->
-                --             li
-                --                 [ css sectionCss
-                --                 ]
-                --                 [ item ]
-                --         )
-                -- )
-                []
+                (comments
+                    |> List.map viewComment
+                    |> List.map
+                        (\item ->
+                            li
+                                [ css sectionCss
+                                ]
+                                [ item ]
+                        )
+                )
             ]
         ]
 
