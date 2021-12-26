@@ -1,4 +1,4 @@
-module Ui exposing (layout, viewLink)
+module Ui exposing (centralMessage, layout, viewLink)
 
 import Css
 import Css.Global
@@ -18,6 +18,23 @@ viewLink label route =
 viewIconLink : Html msg -> Route -> Html msg
 viewIconLink innerHtml route =
     Html.a [ Attr.href (Route.toHref route) ] [ innerHtml ]
+
+
+centralMessage : String -> Html msg
+centralMessage message =
+    div
+        [ css
+            [ pt_4
+            , px_2
+            , pl_3
+            , text_sm
+            , flex
+            , justify_center
+            , h_56
+            , items_center
+            ]
+        ]
+        [ text message ]
 
 
 layout :

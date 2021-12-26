@@ -182,10 +182,10 @@ viewBody model =
                 (Item.kids item |> List.filterMap (\k -> Dict.get k children))
 
         Loading ->
-            div [] [ text "loading..." ]
+            Ui.centralMessage "Loading..."
 
         NotFound ->
-            div [] [ text "not found" ]
+            Ui.centralMessage "Not found"
 
 
 sectionCss =

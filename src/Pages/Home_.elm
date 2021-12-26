@@ -65,7 +65,7 @@ init shared =
 getTopItems : Effect Msg
 getTopItems =
     Query.topItems
-        (\optionals -> { optionals | limit = Present 30 })
+        (\optionals -> { optionals | limit = Present 31 })
         Selections.item
         |> Api.makeRequest GotTopItems
         |> Effect.fromCmd
@@ -74,7 +74,7 @@ getTopItems =
 getTopItemKids : Effect Msg
 getTopItemKids =
     Query.topItems
-        (\optionals -> { optionals | limit = Present 30 })
+        (\optionals -> { optionals | limit = Present 31 })
         Selections.children
         |> Api.makeRequest GotTopChildren
         |> Effect.fromCmd
@@ -142,13 +142,13 @@ view model =
                 , children =
                     [ case model of
                         Loading ->
-                            text ""
+                            Ui.centralMessage "Loading..."
 
                         Loaded items ->
                             viewItems items
 
                         NotFound ->
-                            text "Error"
+                            Ui.centralMessage "Something went wrong..."
                     ]
                 }
         ]
