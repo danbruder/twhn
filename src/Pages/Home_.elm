@@ -4,7 +4,9 @@ import Api
 import Css
 import Css.Global
 import Dict exposing (Dict)
-import Domain exposing (Story)
+import Domain.Item as Item exposing (Item(..))
+import Domain.Story exposing (Story)
+import Effect exposing (Effect)
 import Gen.Params.Home_ exposing (Params)
 import Gen.Route as Route exposing (Route)
 import Graphql.Http
@@ -17,6 +19,7 @@ import Juniper.Object.Story as Story
 import Juniper.Query as Query
 import Page
 import Request
+import Selections
 import Set exposing (Set)
 import Shared
 import Tailwind.Breakpoints as Breakpoints
@@ -28,8 +31,8 @@ import View exposing (View)
 
 page : Shared.Model -> Request.With Params -> Page.With Model Msg
 page shared req =
-    Page.element
-        { init = init
+    Page.advanced
+        { init = init shared
         , update = update
         , view = view
         , subscriptions = subscriptions
@@ -40,14 +43,37 @@ page shared req =
 -- INIT
 
 
-type alias Model =
-    { stories : List Story
-    }
+type Model
+    = Loading
+    | Loaded (List Item)
+    | NotFound
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { stories = [] }, getTopStories )
+init : Shared.Model -> ( Model, Effect Msg )
+init shared =
+    case
+        shared.topItems
+            |> List.filterMap (\id -> Dict.get id shared.items)
+    of
+        [] ->
+            ( Loading
+            , (Query.topItems
+                (\optionals -> { optionals | limit = Present 30 })
+                Selections.item
+                |> Api.makeRequest GotTopItems
+              )
+                |> Effect.fromCmd
+            )
+
+        items ->
+            ( Loaded items
+            , (Query.topItems
+                (\optionals -> { optionals | limit = Present 30 })
+                Selections.item
+                |> Api.makeRequest GotTopItems
+              )
+                |> Effect.fromCmd
+            )
 
 
 
@@ -55,19 +81,24 @@ init =
 
 
 type Msg
-    = GotTopStories (Result (Graphql.Http.Error (List Story)) (List Story))
+    = GotTopItems (Result (Graphql.Http.Error (List Item)) (List Item))
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        GotTopStories response ->
+        GotTopItems response ->
             case response of
-                Ok stories ->
-                    ( { model | stories = stories }, Cmd.none )
+                Ok items ->
+                    ( Loaded items
+                    , [ Shared.gotItems items |> Effect.fromShared
+                      , Shared.gotTopItems (List.map Item.id items) |> Effect.fromShared
+                      ]
+                        |> Effect.batch
+                    )
 
                 Err _ ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
 
 
@@ -91,52 +122,68 @@ view model =
             Ui.layout
                 { title = "Home"
                 , children =
-                    [ viewStories model ]
+                    [ case model of
+                        Loading ->
+                            text ""
+
+                        Loaded items ->
+                            viewItems items
+
+                        NotFound ->
+                            text "Error"
+                    ]
                 }
         ]
     }
 
 
-viewStories : Model -> Html msg
-viewStories model =
-    ul
-        [ css []
+viewItems : List Item -> Html msg
+viewItems items =
+    items
+        |> List.filterMap
+            (\i ->
+                case i of
+                    Item__Story story ->
+                        Just story
+
+                    _ ->
+                        Nothing
+            )
+        |> List.indexedMap viewStory
+        |> ul []
+
+
+viewStory : Int -> Story -> Html msg
+viewStory index story =
+    li [ css [ pt_4, px_2, pl_3, text_sm, flex ] ]
+        [ span [ css [ w_6, flex_shrink_0, text_gray_500 ] ] [ [ String.fromInt (index + 1), ".", " " ] |> String.join "" |> text ]
+        , div []
+            [ div [ css [ font_bold, mr_2 ] ]
+                [ Ui.viewLink story.title (Route.Items__Id_ { id = String.fromInt story.id })
+                ]
+            , div
+                [ css
+                    [ flex
+                    , items_center
+                    , flex_wrap
+                    , text_xs
+                    , text_gray_500
+                    ]
+                ]
+                [ story.url
+                    |> Maybe.map
+                        (\url ->
+                            span [ css [ flex, items_center ] ]
+                                [ span [ css [ mr_1 ] ] [ viewUrl url ]
+                                ]
+                        )
+                    |> Maybe.withDefault (text "")
+                , span [ css [ mr_1 ] ] [ text story.humanTime ]
+                , span [ css [ mr_1 ] ] [ text "by" ]
+                , span [ css [ mr_1 ] ] [ text story.by ]
+                ]
+            ]
         ]
-    <|
-        (model.stories
-            |> List.indexedMap
-                (\i story ->
-                    li [ css [ pt_4, px_2, pl_3, text_sm, flex ] ]
-                        [ span [ css [ w_6, flex_shrink_0, text_gray_500 ] ] [ [ String.fromInt (i + 1), ".", " " ] |> String.join "" |> text ]
-                        , div []
-                            [ div [ css [ font_bold, mr_2 ] ]
-                                [ Ui.viewLink story.title (Route.Stories__Id_ { id = String.fromInt story.id })
-                                ]
-                            , div
-                                [ css
-                                    [ flex
-                                    , items_center
-                                    , flex_wrap
-                                    , text_xs
-                                    , text_gray_500
-                                    ]
-                                ]
-                                [ story.url
-                                    |> Maybe.map
-                                        (\url ->
-                                            span [ css [ flex, items_center ] ]
-                                                [ span [ css [ mr_1 ] ] [ viewUrl url ]
-                                                ]
-                                        )
-                                    |> Maybe.withDefault (text "")
-                                , span [ css [ mr_1 ] ] [ text story.humanTime ]
-                                , span [ css [ mr_1 ] ] [ text "by" ]
-                                , span [ css [ mr_1 ] ] [ text story.by ]
-                                ]
-                            ]
-                        ]
-                )
-        )
 
 
 viewUrl : Url -> Html msg
@@ -152,28 +199,3 @@ viewUrl url =
         ]
         [ url.host |> text
         ]
-
-
-
--- HTTP
-
-
-getTopStories : Cmd Msg
-getTopStories =
-    Query.topStories
-        (\optionals ->
-            { optionals
-                | limit = Present 30
-            }
-        )
-        (SelectionSet.succeed Story
-            |> with Story.id
-            |> with Story.title
-            |> with (SelectionSet.map (Maybe.withDefault "" >> Url.fromString) Story.url)
-            |> hardcoded []
-            |> with Story.by
-            |> with Story.score
-            |> with Story.humanTime
-            |> with (SelectionSet.withDefault [] Story.kids)
-        )
-        |> Api.makeRequest GotTopStories

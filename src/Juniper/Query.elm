@@ -19,11 +19,6 @@ import Juniper.ScalarCodecs
 import Juniper.Union
 
 
-version : SelectionSet String RootQuery
-version =
-    Object.selectionForField "String" "version" [] Decode.string
-
-
 type alias TopItemsOptionalArguments =
     { limit : OptionalArgument Int }
 
@@ -54,47 +49,3 @@ itemById :
     -> SelectionSet (Maybe decodesTo) RootQuery
 itemById requiredArgs____ object____ =
     Object.selectionForCompositeField "itemById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ (Basics.identity >> Decode.nullable)
-
-
-type alias TopStoriesOptionalArguments =
-    { limit : OptionalArgument Int }
-
-
-topStories :
-    (TopStoriesOptionalArguments -> TopStoriesOptionalArguments)
-    -> SelectionSet decodesTo Juniper.Object.Story
-    -> SelectionSet (List decodesTo) RootQuery
-topStories fillInOptionals____ object____ =
-    let
-        filledInOptionals____ =
-            fillInOptionals____ { limit = Absent }
-
-        optionalArgs____ =
-            [ Argument.optional "limit" filledInOptionals____.limit Encode.int ]
-                |> List.filterMap Basics.identity
-    in
-    Object.selectionForCompositeField "topStories" optionalArgs____ object____ (Basics.identity >> Decode.list)
-
-
-type alias StoryByIdRequiredArguments =
-    { id : Int }
-
-
-storyById :
-    StoryByIdRequiredArguments
-    -> SelectionSet decodesTo Juniper.Object.Story
-    -> SelectionSet (Maybe decodesTo) RootQuery
-storyById requiredArgs____ object____ =
-    Object.selectionForCompositeField "storyById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ (Basics.identity >> Decode.nullable)
-
-
-type alias CommentByIdRequiredArguments =
-    { id : Int }
-
-
-commentById :
-    CommentByIdRequiredArguments
-    -> SelectionSet decodesTo Juniper.Object.Comment
-    -> SelectionSet (Maybe decodesTo) RootQuery
-commentById requiredArgs____ object____ =
-    Object.selectionForCompositeField "commentById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ (Basics.identity >> Decode.nullable)

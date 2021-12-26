@@ -1,8 +1,13 @@
-module Pages.Stories.Id_ exposing (Model, Msg, page)
+module Pages.Items.Id_ exposing (Model, Msg, page)
 
 import Api
-import Domain exposing (..)
-import Gen.Params.Stories.Id_ exposing (Params)
+import Dict
+import Domain.Comment exposing (Comment)
+import Domain.Item exposing (Item(..))
+import Domain.Story exposing (Story)
+import Effect exposing (Effect)
+import Gen.Params.Comments.Id_ exposing (Params)
+import Gen.Params.Items.Id_ exposing (Params)
 import Gen.Route as Route exposing (Route)
 import Graphql.Http
 import Graphql.OptionalArgument as OptionalArgument exposing (..)
@@ -12,8 +17,11 @@ import Html.Styled.Attributes as Attr exposing (..)
 import Juniper.Object.Comment as Comment
 import Juniper.Object.Story as Story
 import Juniper.Query as Query
+import Juniper.Union
+import Juniper.Union.Item as Item
 import Page
 import Request
+import Selections
 import Shared
 import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw exposing (..)
@@ -25,8 +33,8 @@ import View exposing (View)
 
 page : Shared.Model -> Request.With Params -> Page.With Model Msg
 page shared req =
-    Page.element
-        { init = init req.params.id
+    Page.advanced
+        { init = init shared req.params.id
         , update = update
         , view = view
         , subscriptions = subscriptions
@@ -37,18 +45,35 @@ page shared req =
 -- INIT
 
 
-type alias Model =
-    { story : Maybe Story }
+type Model
+    = Loading
+    | NotFound
+    | Loaded
+        { item : Item
+        }
 
 
-init : String -> ( Model, Cmd Msg )
-init idStr =
+init : Shared.Model -> String -> ( Model, Effect Msg )
+init shared idStr =
     case String.toInt idStr of
         Just id ->
-            ( { story = Nothing }, getStory id )
+            case Dict.get id shared.items of
+                Just item ->
+                    ( Loaded { item = item }
+                    , Query.itemById { id = id } Selections.item
+                        |> Api.makeRequest GotItem
+                        |> Effect.fromCmd
+                    )
 
-        Nothing ->
-            ( { story = Nothing }, Cmd.none )
+                Nothing ->
+                    ( Loading
+                    , Query.itemById { id = id } Selections.item
+                        |> Api.makeRequest GotItem
+                        |> Effect.fromCmd
+                    )
+
+        _ ->
+            ( NotFound, Effect.none )
 
 
 
@@ -56,19 +81,22 @@ init idStr =
 
 
 type Msg
-    = GotStory (Result (Graphql.Http.Error (Maybe Story)) (Maybe Story))
+    = GotItem (Result (Graphql.Http.Error (Maybe Item)) (Maybe Item))
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        GotStory response ->
+        GotItem response ->
             case response of
-                Ok story ->
-                    ( { model | story = story }, Cmd.none )
+                Ok (Just item) ->
+                    ( Loaded { item = item }, Effect.none )
+
+                Ok Nothing ->
+                    ( NotFound, Effect.none )
 
                 Err _ ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
 
 
@@ -99,12 +127,15 @@ view model =
 
 viewBody : Model -> Html msg
 viewBody model =
-    case model.story of
-        Just story ->
-            viewStory story
+    case model of
+        Loading ->
+            div [] [ text "loading..." ]
 
-        Nothing ->
-            div [] []
+        Loaded { item } ->
+            viewItem item
+
+        NotFound ->
+            div [] [ text "not found" ]
 
 
 sectionCss =
@@ -112,6 +143,16 @@ sectionCss =
     , border_b
     , border_gray_200
     ]
+
+
+viewItem : Item -> Html msg
+viewItem item =
+    case item of
+        Item__Story story ->
+            viewStory story
+
+        Item__Comment comment ->
+            viewComment comment
 
 
 viewStory : Story -> Html msg
@@ -149,16 +190,17 @@ viewStory story =
             ]
         , div []
             [ ul [] <|
-                (story.comments
-                    |> List.map viewComment
-                    |> List.map
-                        (\item ->
-                            li
-                                [ css sectionCss
-                                ]
-                                [ item ]
-                        )
-                )
+                -- (story.comments
+                --     |> List.map viewComment
+                --     |> List.map
+                --         (\item ->
+                --             li
+                --                 [ css sectionCss
+                --                 ]
+                --                 [ item ]
+                --         )
+                -- )
+                []
             ]
         ]
 
@@ -179,7 +221,7 @@ viewUrl url =
 
 
 viewComment : Comment -> Html msg
-viewComment (Comment comment) =
+viewComment comment =
     div []
         [ div [ css [ flex, items_center, pb_2 ] ]
             [ h2 [ css [ font_bold, mr_1 ] ] [ text comment.by ]
@@ -194,7 +236,7 @@ viewComment (Comment comment) =
                             a ->
                                 "(" ++ String.fromInt a ++ " replies)"
                         )
-                        (Route.Comments__Id_ { id = String.fromInt comment.id })
+                        (Route.Items__Id_ { id = String.fromInt comment.id })
                     ]
 
               else
@@ -204,31 +246,3 @@ viewComment (Comment comment) =
             [ class "rendered-comment" ]
             (Util.textHtml comment.text)
         ]
-
-
-getStory : Int -> Cmd Msg
-getStory id =
-    Query.storyById
-        { id = id }
-        (SelectionSet.succeed Story
-            |> with Story.id
-            |> with Story.title
-            |> with (SelectionSet.map (Maybe.withDefault "" >> Url.fromString) Story.url)
-            |> with
-                (Story.comments
-                    (SelectionSet.succeed newComment
-                        |> with Comment.id
-                        |> with Comment.safeText
-                        |> with Comment.by
-                        |> with Comment.humanTime
-                        |> hardcoded []
-                        |> with Comment.parent
-                        |> with (SelectionSet.withDefault [] Comment.kids)
-                    )
-                )
-            |> with Story.by
-            |> with Story.score
-            |> with Story.humanTime
-            |> with (SelectionSet.withDefault [] Story.kids)
-        )
-        |> Api.makeRequest GotStory

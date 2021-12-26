@@ -9,9 +9,5 @@ type Comment
     = Comment
 
 
-type Job
-    = Job
-
-
 type Story
     = Story

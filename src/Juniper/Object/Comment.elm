@@ -61,16 +61,11 @@ time =
     Object.selectionForField "ScalarCodecs.DateTime" "time" [] (Juniper.ScalarCodecs.codecs |> Juniper.Scalar.unwrapCodecs |> .codecDateTime |> .decoder)
 
 
-itemUrl : SelectionSet String Juniper.Object.Comment
-itemUrl =
-    Object.selectionForField "String" "itemUrl" [] Decode.string
-
-
-comments :
-    SelectionSet decodesTo Juniper.Object.Comment
+children :
+    SelectionSet decodesTo Juniper.Union.Item
     -> SelectionSet (List decodesTo) Juniper.Object.Comment
-comments object____ =
-    Object.selectionForCompositeField "comments" [] object____ (Basics.identity >> Decode.list)
+children object____ =
+    Object.selectionForCompositeField "children" [] object____ (Basics.identity >> Decode.list)
 
 
 safeText : SelectionSet String Juniper.Object.Comment
