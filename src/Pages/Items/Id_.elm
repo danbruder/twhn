@@ -6,7 +6,6 @@ import Domain.Comment exposing (Comment)
 import Domain.Item as Item exposing (Item(..))
 import Domain.Story exposing (Story)
 import Effect exposing (Effect)
-import Gen.Params.Comments.Id_ exposing (Params)
 import Gen.Params.Items.Id_ exposing (Params)
 import Gen.Route as Route exposing (Route)
 import Graphql.Http
