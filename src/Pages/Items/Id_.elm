@@ -1,7 +1,8 @@
 module Pages.Items.Id_ exposing (Model, Msg, page)
 
 import Api
-import Dict
+import Browser.Dom as Dom
+import Dict exposing (Dict)
 import Domain.Comment exposing (Comment)
 import Domain.Item as Item exposing (Item(..))
 import Domain.Story exposing (Story)
@@ -24,6 +25,7 @@ import Selections
 import Shared
 import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw exposing (..)
+import Task
 import Ui
 import Url exposing (Url)
 import Util
@@ -49,7 +51,7 @@ type Model
     | NotFound
     | Loaded
         { item : Item
-        , children : List Item
+        , children : Dict Int Item
         }
 
 
@@ -62,10 +64,16 @@ init shared idStr =
                     let
                         children =
                             Item.kids item
-                                |> List.filterMap (\kid -> Dict.get kid shared.items)
+                                |> List.filterMap
+                                    (\kid ->
+                                        Dict.get kid shared.items
+                                            |> Maybe.map (Tuple.pair kid)
+                                    )
+                                |> Dict.fromList
                     in
                     ( Loaded { item = item, children = children }
-                    , boot id
+                    , [ boot id, resetViewport ]
+                        |> Effect.batch
                     )
 
                 Nothing ->
@@ -75,6 +83,12 @@ init shared idStr =
 
         _ ->
             ( NotFound, Effect.none )
+
+
+resetViewport : Effect Msg
+resetViewport =
+    Task.perform (\_ -> NoOp) (Dom.setViewport 0 0)
+        |> Effect.fromCmd
 
 
 type alias Response =
@@ -101,23 +115,29 @@ boot id =
 -- UPDATE
 
 
-type alias Children =
-    Maybe (List Item)
-
-
 type Msg
     = GotItem (Result (Graphql.Http.Error Response) Response)
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
+        NoOp ->
+            ( model, Effect.none )
+
         GotItem response ->
             case response of
                 Ok payload ->
                     case ( payload.item, payload.children ) of
                         ( Just item, Just children ) ->
-                            ( Loaded { item = item, children = children }
+                            ( Loaded
+                                { item = item
+                                , children =
+                                    children
+                                        |> List.map (\item_ -> ( Item.id item_, item_ ))
+                                        |> Dict.fromList
+                                }
                             , Shared.gotItems (item :: children) |> Effect.fromShared
                             )
 
@@ -157,11 +177,12 @@ view model =
 viewBody : Model -> Html msg
 viewBody model =
     case model of
+        Loaded { item, children } ->
+            viewItem item
+                (Item.kids item |> List.filterMap (\k -> Dict.get k children))
+
         Loading ->
             div [] [ text "loading..." ]
-
-        Loaded { item, children } ->
-            viewItem item children
 
         NotFound ->
             div [] [ text "not found" ]
@@ -179,10 +200,25 @@ viewItem item children =
     case item of
         Item__Story story ->
             viewStory story
-                (children |> List.filterMap Item.comment)
+                (children
+                    |> List.filterMap Item.comment
+                    |> List.filter
+                        (\comment ->
+                            comment.parent == story.id
+                        )
+                )
 
         Item__Comment comment ->
-            viewComment comment
+            comment
+                :: (children
+                        |> List.filterMap Item.comment
+                        |> List.filter
+                            (\c ->
+                                c.parent == comment.id
+                            )
+                   )
+                |> List.map viewComment
+                |> div []
 
 
 viewStory : Story -> List Comment -> Html msg
@@ -222,13 +258,6 @@ viewStory story comments =
             [ ul [] <|
                 (comments
                     |> List.map viewComment
-                    |> List.map
-                        (\item ->
-                            li
-                                [ css sectionCss
-                                ]
-                                [ item ]
-                        )
                 )
             ]
         ]
@@ -251,7 +280,7 @@ viewUrl url =
 
 viewComment : Comment -> Html msg
 viewComment comment =
-    div []
+    div [ css (sectionCss ++ [ text_sm ]) ]
         [ div [ css [ flex, items_center, pb_2 ] ]
             [ h2 [ css [ font_bold, mr_1 ] ] [ text comment.by ]
             , span [ css [ mr_1 ] ] [ text comment.humanTime ]
