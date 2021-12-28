@@ -46,6 +46,7 @@ item =
                 (SelectionSet.succeed Story
                     |> with Story.id
                     |> with Story.title
+                    |> with Story.safeText
                     |> with (SelectionSet.map (Maybe.withDefault "" >> Url.fromString) Story.url)
                     |> with Story.by
                     |> with Story.score

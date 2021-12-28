@@ -301,6 +301,7 @@ viewStory story comments =
                   else
                     text ""
                 ]
+            , div [] [ story.safeText |> text ]
             ]
         , div []
             [ ul [] <|

@@ -6,6 +6,7 @@ import Url exposing (Url)
 type alias Story =
     { id : Int
     , title : String
+    , safeText : String
     , url : Maybe Url
     , by : String
     , score : Int
