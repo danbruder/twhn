@@ -51,7 +51,7 @@ type Model
     | NotFound
     | Loaded
         { item : Item
-        , children : Dict Int Item
+        , items : Dict Int Item
         }
 
 
@@ -62,7 +62,7 @@ init shared idStr =
             case Dict.get id shared.items of
                 Just item ->
                     let
-                        children =
+                        items =
                             Item.kids item
                                 |> List.filterMap
                                     (\kid ->
@@ -71,7 +71,7 @@ init shared idStr =
                                     )
                                 |> Dict.fromList
                     in
-                    ( Loaded { item = item, children = children }
+                    ( Loaded { item = item, items = items }
                     , [ boot id, resetViewport ]
                         |> Effect.batch
                     )
@@ -94,19 +94,25 @@ resetViewport =
 type alias Response =
     { item : Maybe Item
     , children : Maybe (List Item)
+    , descendants : Maybe (List Item)
+    , ancestors : Maybe (List Item)
     }
 
 
 boot : Int -> Effect Msg
 boot id =
-    SelectionSet.map2
-        (\maybeItem maybeChildren ->
+    SelectionSet.map4
+        (\maybeItem maybeChildren maybeDescendants maybeAncestors ->
             { item = maybeItem
             , children = maybeChildren
+            , descendants = maybeDescendants
+            , ancestors = maybeAncestors
             }
         )
         (Query.itemById { id = id } Selections.item)
         (Query.itemById { id = id } Selections.children)
+        (Query.itemById { id = id } Selections.descendants)
+        (Query.itemById { id = id } Selections.ancestors)
         |> Api.makeRequest GotItem
         |> Effect.fromCmd
 
@@ -129,16 +135,24 @@ update msg model =
         GotItem response ->
             case response of
                 Ok payload ->
-                    case ( payload.item, payload.children ) of
-                        ( Just item, Just children ) ->
-                            ( Loaded
-                                { item = item
-                                , children =
-                                    children
+                    case payload.item of
+                        Just item ->
+                            let
+                                items =
+                                    [ payload.children
+                                    , payload.descendants
+                                    , payload.ancestors
+                                    ]
+                                        |> List.filterMap identity
+                                        |> List.concat
                                         |> List.map (\item_ -> ( Item.id item_, item_ ))
                                         |> Dict.fromList
+                            in
+                            ( Loaded
+                                { item = item
+                                , items = items
                                 }
-                            , Shared.gotItems (item :: children) |> Effect.fromShared
+                            , Shared.gotItems (item :: Dict.values items) |> Effect.fromShared
                             )
 
                         _ ->
@@ -193,9 +207,9 @@ view model =
 viewBody : Model -> Html msg
 viewBody model =
     case model of
-        Loaded { item, children } ->
+        Loaded { item, items } ->
             viewItem item
-                (Item.kids item |> List.filterMap (\k -> Dict.get k children))
+                (Item.kids item |> List.filterMap (\k -> Dict.get k items))
 
         Loading ->
             Ui.centralMessage "Loading..."
@@ -212,11 +226,20 @@ sectionCss =
 
 
 viewItem : Item -> List Item -> Html msg
-viewItem item children =
+viewItem item items =
+    let
+        comments =
+            items
+                |> List.filterMap Item.comment
+
+        -- Right now we have a single level of comments
+        -- what we need is the other comments first
+        -- Now we have everything up!
+    in
     case item of
         Item__Story story ->
             viewStory story
-                (children
+                (items
                     |> List.filterMap Item.comment
                     |> List.filter
                         (\comment ->
@@ -226,7 +249,7 @@ viewItem item children =
 
         Item__Comment comment ->
             comment
-                :: (children
+                :: (items
                         |> List.filterMap Item.comment
                         |> List.filter
                             (\c ->
@@ -235,6 +258,15 @@ viewItem item children =
                    )
                 |> List.map viewComment
                 |> div []
+
+
+childrenComments : Int -> List Comment -> List Comment
+childrenComments parentId allComments =
+    allComments
+        |> List.filter
+            (\comment ->
+                comment.parent == parentId
+            )
 
 
 viewStory : Story -> List Comment -> Html msg
@@ -300,21 +332,6 @@ viewComment comment =
         [ div [ css [ flex, items_center, pb_2 ] ]
             [ h2 [ css [ font_bold, mr_1 ] ] [ text comment.by ]
             , span [ css [ mr_1 ] ] [ text comment.humanTime ]
-            , if not (List.isEmpty comment.kids) then
-                span [ css [ underline, text_gray_500 ] ]
-                    [ Ui.viewLink
-                        (case List.length comment.kids of
-                            1 ->
-                                "(1 reply)"
-
-                            a ->
-                                "(" ++ String.fromInt a ++ " replies)"
-                        )
-                        (Route.Items__Id_ { id = String.fromInt comment.id })
-                    ]
-
-              else
-                text ""
             ]
         , div
             [ class "rendered-comment" ]

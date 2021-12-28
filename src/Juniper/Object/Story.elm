@@ -19,64 +19,46 @@ import Juniper.ScalarCodecs
 import Juniper.Union
 
 
-{-| The item's unique id.
--}
 id : SelectionSet Int Juniper.Object.Story
 id =
     Object.selectionForField "Int" "id" [] Decode.int
 
 
-{-| The total comment count.
--}
-descendants : SelectionSet Int Juniper.Object.Story
-descendants =
-    Object.selectionForField "Int" "descendants" [] Decode.int
+totalCommentCount : SelectionSet Int Juniper.Object.Story
+totalCommentCount =
+    Object.selectionForField "Int" "totalCommentCount" [] Decode.int
 
 
-{-| The username of the item's author.
--}
 by : SelectionSet String Juniper.Object.Story
 by =
     Object.selectionForField "String" "by" [] Decode.string
 
 
-{-| The ids of the item's comments, in ranked display order.
--}
 kids : SelectionSet (Maybe (List Int)) Juniper.Object.Story
 kids =
     Object.selectionForField "(Maybe (List Int))" "kids" [] (Decode.int |> Decode.list |> Decode.nullable)
 
 
-{-| The story's score.
--}
 score : SelectionSet Int Juniper.Object.Story
 score =
     Object.selectionForField "Int" "score" [] Decode.int
 
 
-{-| The title of the story.
--}
 title : SelectionSet String Juniper.Object.Story
 title =
     Object.selectionForField "String" "title" [] Decode.string
 
 
-{-| The URL of the story.
--}
 url : SelectionSet (Maybe String) Juniper.Object.Story
 url =
     Object.selectionForField "(Maybe String)" "url" [] (Decode.string |> Decode.nullable)
 
 
-{-| The story text. HTML.
--}
 text : SelectionSet (Maybe String) Juniper.Object.Story
 text =
     Object.selectionForField "(Maybe String)" "text" [] (Decode.string |> Decode.nullable)
 
 
-{-| Creation date of the item, in Unix Time.
--}
 time : SelectionSet Juniper.ScalarCodecs.DateTime Juniper.Object.Story
 time =
     Object.selectionForField "ScalarCodecs.DateTime" "time" [] (Juniper.ScalarCodecs.codecs |> Juniper.Scalar.unwrapCodecs |> .codecDateTime |> .decoder)
@@ -87,6 +69,13 @@ children :
     -> SelectionSet (List decodesTo) Juniper.Object.Story
 children object____ =
     Object.selectionForCompositeField "children" [] object____ (Basics.identity >> Decode.list)
+
+
+descendants :
+    SelectionSet decodesTo Juniper.Union.Item
+    -> SelectionSet (List decodesTo) Juniper.Object.Story
+descendants object____ =
+    Object.selectionForCompositeField "descendants" [] object____ (Basics.identity >> Decode.list)
 
 
 safeText : SelectionSet String Juniper.Object.Story

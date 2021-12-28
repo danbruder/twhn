@@ -65,3 +65,23 @@ children =
             SelectionSet.succeed identity
                 |> with (Story.children item)
         }
+
+
+descendants : SelectionSet (List Item) Juniper.Union.Item
+descendants =
+    ItemUnion.fragments
+        { onComment =
+            SelectionSet.succeed identity
+                |> with (Comment.descendants item)
+        , onStory = SelectionSet.succeed identity |> hardcoded []
+        }
+
+
+ancestors : SelectionSet (List Item) Juniper.Union.Item
+ancestors =
+    ItemUnion.fragments
+        { onComment =
+            SelectionSet.succeed identity
+                |> with (Comment.ancestors item)
+        , onStory = SelectionSet.succeed identity |> hardcoded []
+        }
