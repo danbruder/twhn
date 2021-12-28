@@ -208,8 +208,7 @@ viewBody : Model -> Html msg
 viewBody model =
     case model of
         Loaded { item, items } ->
-            viewItem item
-                (Item.kids item |> List.filterMap (\k -> Dict.get k items))
+            viewItem item items
 
         Loading ->
             Ui.centralMessage "Loading..."
@@ -225,52 +224,43 @@ sectionCss =
     ]
 
 
-viewItem : Item -> List Item -> Html msg
+viewItem : Item -> Dict Int Item -> Html msg
 viewItem item items =
     let
-        comments =
-            items
+        getKids : Item -> List Item
+        getKids parent =
+            parent
+                |> Item.kids
+                |> List.filterMap (\k -> Dict.get k items)
+
+        renderedTopItem =
+            case item of
+                Item__Story story ->
+                    viewStory story
+
+                Item__Comment comment ->
+                    viewComment comment []
+
+        renderedComments =
+            getKids item
                 |> List.filterMap Item.comment
-
-        -- Right now we have a single level of comments
-        -- what we need is the other comments first
-        -- Now we have everything up!
-    in
-    case item of
-        Item__Story story ->
-            viewStory story
-                (items
-                    |> List.filterMap Item.comment
-                    |> List.filter
-                        (\comment ->
-                            comment.parent == story.id
-                        )
-                )
-
-        Item__Comment comment ->
-            comment
-                :: (items
-                        |> List.filterMap Item.comment
-                        |> List.filter
-                            (\c ->
-                                c.parent == comment.id
+                |> List.map
+                    (\c ->
+                        viewComment c
+                            (getKids (Item__Comment c)
+                                |> List.filterMap Item.comment
                             )
-                   )
-                |> List.map viewComment
+                    )
                 |> div []
+    in
+    div []
+        [ renderedTopItem
+        , renderedComments
+        ]
 
 
-childrenComments : Int -> List Comment -> List Comment
-childrenComments parentId allComments =
-    allComments
-        |> List.filter
-            (\comment ->
-                comment.parent == parentId
-            )
-
-
-viewStory : Story -> List Comment -> Html msg
-viewStory story comments =
+viewStory : Story -> Html msg
+viewStory story =
     div [ css [ text_sm ] ]
         [ div
             [ css sectionCss
@@ -303,12 +293,6 @@ viewStory story comments =
                 ]
             , div [] [ story.safeText |> text ]
             ]
-        , div []
-            [ ul [] <|
-                (comments
-                    |> List.map viewComment
-                )
-            ]
         ]
 
 
@@ -327,14 +311,43 @@ viewUrl url =
         ]
 
 
-viewComment : Comment -> Html msg
-viewComment comment =
+viewComment : Comment -> List Comment -> Html msg
+viewComment comment comments =
+    let
+        renderSingle inner =
+            div []
+                [ div [ css [ flex, items_center, pb_2 ] ]
+                    [ h2 [ css [ font_bold, mr_1 ] ] [ text inner.by ]
+                    , span [ css [ mr_1 ] ] [ text inner.humanTime ]
+                    ]
+                , div
+                    [ class "rendered-comment" ]
+                    (Util.textHtml inner.text)
+                ]
+
+        thing =
+            div [ css [ h_6, w_px, ml_2, bg_gray_300, mt_2, mb_1 ] ] []
+
+        renderSubComment inner =
+            div [ css [ my_4, p_4, rounded_lg, bg_gray_100 ] ]
+                [ renderSingle inner
+                ]
+
+        hasMore =
+            List.length comments > 2
+    in
     div [ css (sectionCss ++ [ text_sm ]) ]
-        [ div [ css [ flex, items_center, pb_2 ] ]
-            [ h2 [ css [ font_bold, mr_1 ] ] [ text comment.by ]
-            , span [ css [ mr_1 ] ] [ text comment.humanTime ]
-            ]
-        , div
-            [ class "rendered-comment" ]
-            (Util.textHtml comment.text)
+        [ renderSingle comment
+        , div [] <| List.map renderSubComment (List.take 2 comments)
+        , if hasMore then
+            div [ css [ underline ] ]
+                [ Ui.viewLink ("Show this thread (" ++ String.fromInt (List.length comments) ++ ")")
+                    (Route.Items__Id_
+                        { id = String.fromInt comment.id
+                        }
+                    )
+                ]
+
+          else
+            text ""
         ]

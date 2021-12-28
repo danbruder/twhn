@@ -71,10 +71,8 @@ children =
 descendants : SelectionSet (List Item) Juniper.Union.Item
 descendants =
     ItemUnion.fragments
-        { onComment =
-            SelectionSet.succeed identity
-                |> with (Comment.descendants item)
-        , onStory = SelectionSet.succeed identity |> hardcoded []
+        { onComment = Comment.descendants item
+        , onStory = Story.descendants item
         }
 
 
