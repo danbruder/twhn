@@ -38,3 +38,23 @@ comment item =
 
         Item__Comment c ->
             Just c
+
+
+isComment : Item -> Bool
+isComment item =
+    case item of
+        Item__Story _ ->
+            False
+
+        Item__Comment c ->
+            True
+
+
+isStory : Item -> Bool
+isStory item =
+    case item of
+        Item__Comment _ ->
+            False
+
+        Item__Story c ->
+            True

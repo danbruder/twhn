@@ -163,11 +163,27 @@ subscriptions model =
 
 view : Model -> View msg
 view model =
+    let
+        title =
+            case model of
+                Loaded { item } ->
+                    if Item.isComment item then
+                        "Comment"
+
+                    else if Item.isStory item then
+                        "Story"
+
+                    else
+                        ""
+
+                _ ->
+                    ""
+    in
     { title = "TWHN"
     , body =
         [ Html.toUnstyled <|
             Ui.layout
-                { title = "Story"
+                { title = title
                 , children = [ viewBody model ]
                 }
         ]
