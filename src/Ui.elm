@@ -56,7 +56,7 @@ layout config =
             [ Css.Global.global Tw.globalStyles
             , div [ css [ flex ] ]
                 [ div
-                    [ css [ mx_auto, Tw.hidden, Breakpoints.lg [ block ] ] ]
+                    [ css [ mx_auto, fixed, Tw.hidden, Breakpoints.lg [ block ] ] ]
                     [ viewMainMenu ]
                 , div
                     [ css
@@ -71,12 +71,13 @@ layout config =
                     [ div
                         [ css
                             [ p_4
-                            , border_t
-                            , border_r
-                            , border_l
-                            , border_gray_200
                             , flex
+                            , sticky
+                            , top_0
                             , items_center
+                            , bg_white
+                            , border_l
+                            , border_r
                             ]
                         ]
                         [ a
@@ -96,11 +97,11 @@ layout config =
                             ]
                             [ text config.title ]
                         ]
-                    , div [ css [ border, border_gray_200 ] ] config.children
+                    , div [ css [ border, border_t, border_gray_200 ] ] config.children
                     ]
                 ]
             , div
-                [ css [ mx_auto, Tw.hidden, Breakpoints.lg [ block ] ] ]
+                [ css [ mx_auto, fixed, Tw.hidden, Breakpoints.lg [ block ] ] ]
                 [ viewSidebar ]
             ]
         ]
