@@ -22,6 +22,7 @@ import Juniper.Union
 type alias Fragments decodesTo =
     { onStory : SelectionSet decodesTo Juniper.Object.Story
     , onComment : SelectionSet decodesTo Juniper.Object.Comment
+    , onJob : SelectionSet decodesTo Juniper.Object.Job
     }
 
 
@@ -34,6 +35,7 @@ fragments selections____ =
     Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Story" selections____.onStory
         , Object.buildFragment "Comment" selections____.onComment
+        , Object.buildFragment "Job" selections____.onJob
         ]
 
 
@@ -44,4 +46,5 @@ maybeFragments : Fragments (Maybe decodesTo)
 maybeFragments =
     { onStory = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onComment = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onJob = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     }

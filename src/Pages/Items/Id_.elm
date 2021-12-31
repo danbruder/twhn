@@ -241,6 +241,9 @@ viewItem item items =
                 Item__Comment comment ->
                     viewComment comment []
 
+                Item__Job job ->
+                    div [] []
+
         renderedComments =
             getKids item
                 |> List.filterMap Item.comment

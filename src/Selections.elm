@@ -3,6 +3,7 @@ module Selections exposing (..)
 import Api
 import Domain.Comment exposing (Comment)
 import Domain.Item as Item exposing (Item(..))
+import Domain.Job exposing (Job)
 import Domain.Story exposing (Story)
 import Effect exposing (Effect)
 import Gen.Params.Items.Id_ exposing (Params)
@@ -13,6 +14,7 @@ import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, hardcoded, w
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
 import Juniper.Object.Comment as Comment
+import Juniper.Object.Job as Job
 import Juniper.Object.Story as Story
 import Juniper.Query as Query
 import Juniper.Union
@@ -53,6 +55,16 @@ item =
                     |> with Story.humanTime
                     |> with (SelectionSet.withDefault [] Story.kids)
                 )
+        , onJob =
+            SelectionSet.map Item__Job
+                (SelectionSet.succeed Job
+                    |> with Job.id
+                    |> with Job.score
+                    |> with Job.safeText
+                    |> with (SelectionSet.map (Maybe.withDefault "" >> Url.fromString) Job.url)
+                    |> with Job.humanTime
+                    |> with Job.title
+                )
         }
 
 
@@ -65,6 +77,7 @@ children =
         , onStory =
             SelectionSet.succeed identity
                 |> with (Story.children item)
+        , onJob = SelectionSet.succeed identity |> hardcoded []
         }
 
 
@@ -73,6 +86,7 @@ descendants =
     ItemUnion.fragments
         { onComment = Comment.descendants item
         , onStory = Story.descendants item
+        , onJob = SelectionSet.succeed identity |> hardcoded []
         }
 
 
@@ -83,4 +97,5 @@ ancestors =
             SelectionSet.succeed identity
                 |> with (Comment.ancestors item)
         , onStory = SelectionSet.succeed identity |> hardcoded []
+        , onJob = SelectionSet.succeed identity |> hardcoded []
         }

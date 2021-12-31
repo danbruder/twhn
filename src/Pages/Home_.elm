@@ -5,6 +5,7 @@ import Css
 import Css.Global
 import Dict exposing (Dict)
 import Domain.Item as Item exposing (Item(..))
+import Domain.Job exposing (Job)
 import Domain.Story exposing (Story)
 import Effect exposing (Effect)
 import Gen.Params.Home_ exposing (Params)
@@ -158,16 +159,19 @@ view model =
 viewItems : List Item -> Html msg
 viewItems items =
     items
-        |> List.filterMap
-            (\i ->
-                case i of
+        |> List.filter (\item -> Item.isStory item || Item.isJob item)
+        |> List.indexedMap
+            (\index item ->
+                case item of
                     Item__Story story ->
-                        Just story
+                        viewStory index story
+
+                    Item__Job job ->
+                        viewJob index job
 
                     _ ->
-                        Nothing
+                        text ""
             )
-        |> List.indexedMap viewStory
         |> ul []
 
 
@@ -199,6 +203,37 @@ viewStory index story =
                 , span [ css [ mr_1 ] ] [ text story.humanTime ]
                 , span [ css [ mr_1 ] ] [ text "by" ]
                 , span [ css [ mr_1 ] ] [ text story.by ]
+                ]
+            ]
+        ]
+
+
+viewJob : Int -> Job -> Html msg
+viewJob index job =
+    li [ css [ pt_4, px_2, pl_3, text_sm, flex ] ]
+        [ span [ css [ w_6, flex_shrink_0, text_gray_500 ] ] [ [ String.fromInt (index + 1), ".", " " ] |> String.join "" |> text ]
+        , div []
+            [ div [ css [ font_bold, mr_2 ] ]
+                [ Ui.viewLink job.title (Route.Items__Id_ { id = String.fromInt job.id })
+                ]
+            , div
+                [ css
+                    [ flex
+                    , items_center
+                    , flex_wrap
+                    , text_xs
+                    , text_gray_500
+                    ]
+                ]
+                [ job.url
+                    |> Maybe.map
+                        (\url ->
+                            span [ css [ flex, items_center ] ]
+                                [ span [ css [ mr_1 ] ] [ viewUrl url ]
+                                ]
+                        )
+                    |> Maybe.withDefault (text "")
+                , span [ css [ mr_1 ] ] [ text job.humanTime ]
                 ]
             ]
         ]
