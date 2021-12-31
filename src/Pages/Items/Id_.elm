@@ -329,7 +329,7 @@ viewComment comment comments =
             div [ css [ h_6, w_px, ml_2, bg_gray_300, mt_2, mb_1 ] ] []
 
         renderSubComment inner =
-            div [ css [ my_4, p_4, rounded_lg, bg_gray_100 ] ]
+            div [ css [ my_4, p_4, rounded_lg, bg_gray_50 ] ]
                 [ renderSingle inner
                 ]
 
