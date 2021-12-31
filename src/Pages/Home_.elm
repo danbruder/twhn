@@ -214,7 +214,12 @@ viewJob index job =
         [ span [ css [ w_6, flex_shrink_0, text_gray_500 ] ] [ [ String.fromInt (index + 1), ".", " " ] |> String.join "" |> text ]
         , div []
             [ div [ css [ font_bold, mr_2 ] ]
-                [ Ui.viewLink job.title (Route.Items__Id_ { id = String.fromInt job.id })
+                [ job.url
+                    |> Maybe.map
+                        (\url ->
+                            a [ href (Url.toString url), target "blank_" ] [ text job.title ]
+                        )
+                    |> Maybe.withDefault (text job.title)
                 ]
             , div
                 [ css
@@ -225,15 +230,7 @@ viewJob index job =
                     , text_gray_500
                     ]
                 ]
-                [ job.url
-                    |> Maybe.map
-                        (\url ->
-                            span [ css [ flex, items_center ] ]
-                                [ span [ css [ mr_1 ] ] [ viewUrl url ]
-                                ]
-                        )
-                    |> Maybe.withDefault (text "")
-                , span [ css [ mr_1 ] ] [ text job.humanTime ]
+                [ span [ css [ mr_1 ] ] [ text job.humanTime ]
                 ]
             ]
         ]
