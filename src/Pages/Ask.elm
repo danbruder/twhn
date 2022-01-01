@@ -27,7 +27,7 @@ page shared req =
                 , query = query
                 }
         , update = CL.update key query
-        , view = CL.view key
+        , view = CL.view key req.route
         , subscriptions = CL.subscriptions
         }
 

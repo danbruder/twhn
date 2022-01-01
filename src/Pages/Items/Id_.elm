@@ -43,7 +43,7 @@ page shared req =
     Page.advanced
         { init = init shared req.params.id commentsToShow
         , update = update
-        , view = view
+        , view = view req.route
         , subscriptions = subscriptions
         }
 
@@ -190,8 +190,8 @@ subscriptions model =
 -- VIEW
 
 
-view : Model -> View msg
-view model =
+view : Route -> Model -> View msg
+view route model =
     let
         title =
             case model.status of
@@ -214,6 +214,7 @@ view model =
             Ui.layout
                 { title = title
                 , children = [ viewBody model ]
+                , route = route
                 }
         ]
     }

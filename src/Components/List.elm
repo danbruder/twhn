@@ -136,8 +136,8 @@ subscriptions model =
 -- VIEW
 
 
-view : String -> Model -> View msg
-view title model =
+view : String -> Route -> Model -> View msg
+view title route model =
     { title = "TWHN"
     , body =
         [ Html.toUnstyled <|
@@ -154,6 +154,7 @@ view title model =
                         NotFound ->
                             Ui.centralMessage "Something went wrong..."
                     ]
+                , route = route
                 }
         ]
     }

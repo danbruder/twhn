@@ -41,6 +41,7 @@ centralMessage message =
 layout :
     { title : String
     , children : List (Html msg)
+    , route : Route
     }
     -> Html msg
 layout config =
@@ -58,7 +59,7 @@ layout config =
             , div [ css [ flex ] ]
                 [ div
                     [ css [ mx_auto, fixed ] ]
-                    [ viewMainMenu ]
+                    [ viewMainMenu config.route ]
                 , div
                     [ css
                         [ Tw.w_full
@@ -108,8 +109,47 @@ layout config =
         ]
 
 
-viewMainMenu : Html msg
-viewMainMenu =
+viewMainMenu : Route -> Html msg
+viewMainMenu currentRoute =
+    let
+        isActive route =
+            route == currentRoute
+
+        mainMenuLink route val icon =
+            a
+                [ href (Route.toHref route)
+                , css
+                    [ block
+                    , rounded_full
+                    , py_2
+                    , px_4
+                    , mt_3
+                    , Css.hover [ bg_gray_100 ]
+                    , Tw.hidden
+                    , Breakpoints.lg
+                        [ block
+                        ]
+                    , if isActive route then
+                        font_bold
+
+                      else
+                        font_normal
+                    ]
+                ]
+                [ div [ css [ flex, items_center ] ]
+                    [ div [ css [ w_8, h_8, mr_2 ] ] [ icon [] |> Html.fromUnstyled ]
+                    , div
+                        [ css
+                            [ Tw.hidden
+                            , Breakpoints.xl
+                                [ block
+                                ]
+                            ]
+                        ]
+                        [ text val ]
+                    ]
+                ]
+    in
     div
         [ css [ p_4 ] ]
         [ a
@@ -130,37 +170,6 @@ viewMainMenu =
         , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase
 
         --, mainMenuLink Route.Home_ "Stats" Heroicons.Outline.presentationChartLine
-        ]
-
-
-mainMenuLink route val icon =
-    a
-        [ href (Route.toHref route)
-        , css
-            [ block
-            , rounded_full
-            , py_2
-            , px_4
-            , mt_3
-            , Css.hover [ bg_gray_100 ]
-            , Tw.hidden
-            , Breakpoints.lg
-                [ block
-                ]
-            ]
-        ]
-        [ div [ css [ flex, items_center ] ]
-            [ div [ css [ w_8, h_8, mr_2 ] ] [ icon [] |> Html.fromUnstyled ]
-            , div
-                [ css
-                    [ Tw.hidden
-                    , Breakpoints.xl
-                        [ block
-                        ]
-                    ]
-                ]
-                [ text val ]
-            ]
         ]
 
 
