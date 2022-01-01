@@ -294,7 +294,9 @@ viewStory story =
                   else
                     text ""
                 ]
-            , div [] [ story.safeText |> text ]
+            , div
+                [ class "rendered-comment" ]
+                (Util.textHtml story.safeText)
             ]
         ]
 
