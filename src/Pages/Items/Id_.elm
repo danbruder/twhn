@@ -83,18 +83,18 @@ init shared idStr commentsToShow =
                                     )
                                 |> Dict.fromList
                     in
-                    ( { status = Loaded { item = item, items = items }, commentsToShow = 2 }
+                    ( { status = Loaded { item = item, items = items }, commentsToShow = commentsToShow }
                     , [ boot id, resetViewport ]
                         |> Effect.batch
                     )
 
                 Nothing ->
-                    ( { status = Loading, commentsToShow = 2 }
+                    ( { status = Loading, commentsToShow = commentsToShow }
                     , boot id
                     )
 
         _ ->
-            ( { status = NotFound, commentsToShow = 2 }, Effect.none )
+            ( { status = NotFound, commentsToShow = commentsToShow }, Effect.none )
 
 
 resetViewport : Effect Msg
@@ -224,7 +224,7 @@ viewBody : Model -> Html msg
 viewBody model =
     case model.status of
         Loaded { item, items } ->
-            viewItem item items
+            viewItem item items model.commentsToShow
 
         Loading ->
             Ui.centralMessage "Loading..."
@@ -240,8 +240,8 @@ sectionCss =
     ]
 
 
-viewItem : Item -> Dict Int Item -> Html msg
-viewItem item items =
+viewItem : Item -> Dict Int Item -> Int -> Html msg
+viewItem item items commentsToShow =
     let
         getKids : Item -> List Item
         getKids parent =
@@ -255,7 +255,7 @@ viewItem item items =
                     viewStory story
 
                 Item__Comment comment ->
-                    viewComment comment []
+                    viewComment comment [] commentsToShow
 
                 Item__Job job ->
                     div [] []
@@ -269,6 +269,7 @@ viewItem item items =
                             (getKids (Item__Comment c)
                                 |> List.filterMap Item.comment
                             )
+                            commentsToShow
                     )
                 |> div []
     in
@@ -332,8 +333,8 @@ viewUrl url =
         ]
 
 
-viewComment : Comment -> List Comment -> Html msg
-viewComment comment comments =
+viewComment : Comment -> List Comment -> Int -> Html msg
+viewComment comment comments commentsToShow =
     let
         renderSingle inner =
             div []
@@ -355,18 +356,19 @@ viewComment comment comments =
                 ]
 
         hasMore =
-            List.length comments > 2
+            List.length comments > commentsToShow
     in
     div [ css (sectionCss ++ [ text_sm ]) ]
         [ renderSingle comment
-        , div [] <| List.map renderSubComment (List.take 2 comments)
+        , div [] <| List.map renderSubComment (List.take commentsToShow comments)
         , if hasMore then
             div [ css [ underline ] ]
-                [ Ui.viewLink ("Show this thread (" ++ String.fromInt (List.length comments) ++ ")")
+                [ Ui.viewLinkWithQuery ("Show this thread (" ++ String.fromInt (List.length comments) ++ ")")
                     (Route.Items__Id_
                         { id = String.fromInt comment.id
                         }
                     )
+                    (Dict.fromList [ ( "commentsToShow", String.fromInt 100 ) ])
                 ]
 
           else

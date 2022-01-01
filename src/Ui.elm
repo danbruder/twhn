@@ -1,7 +1,8 @@
-module Ui exposing (centralMessage, layout, viewLink)
+module Ui exposing (centralMessage, layout, viewLink, viewLinkWithQuery)
 
 import Css
 import Css.Global
+import Dict exposing (Dict)
 import Gen.Route as Route exposing (Route)
 import Heroicons.Outline
 import Html.Styled as Html exposing (..)
@@ -14,6 +15,30 @@ import Tailwind.Utilities as Tw exposing (..)
 viewLink : String -> Route -> Html msg
 viewLink label route =
     Html.a [ Attr.href (Route.toHref route) ] [ Html.text label ]
+
+
+viewLinkWithQuery : String -> Route -> Dict String String -> Html msg
+viewLinkWithQuery label route query =
+    let
+        queryStr =
+            Dict.toList query
+                |> List.map
+                    (\( key, val ) ->
+                        key ++ "=" ++ val
+                    )
+                |> String.join "&"
+
+        finalRoute =
+            [ Route.toHref route
+            , "?"
+            , queryStr
+            ]
+                |> String.join ""
+    in
+    Html.a
+        [ Attr.href finalRoute
+        ]
+        [ Html.text label ]
 
 
 viewIconLink : Html msg -> Route -> Html msg
