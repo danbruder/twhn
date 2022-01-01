@@ -1,8 +1,8 @@
-module Pages.Home_ exposing (Model, Msg, page)
+module Pages.Show exposing (Model, Msg, page)
 
 import Components.List as CL
 import Dict exposing (Dict)
-import Gen.Params.Home_ exposing (Params)
+import Gen.Params.Show exposing (Params)
 import Juniper.Query as Query
 import Page
 import Request
@@ -10,11 +10,11 @@ import Shared
 
 
 key =
-    "Home"
+    "Show"
 
 
 query =
-    Query.topItems
+    Query.showItems
 
 
 page : Shared.Model -> Request.With Params -> Page.With Model Msg

@@ -3,7 +3,7 @@ module Shared exposing
     , Model
     , Msg
     , gotItems
-    , gotTopItems
+    , gotListIndex
     , init
     , subscriptions
     , update
@@ -21,19 +21,19 @@ type alias Flags =
 
 type alias Model =
     { items : Dict Int Item
-    , topItems : List Int
+    , listIndex : Dict String (List Int)
     }
 
 
 type Msg
     = GotItem Item
     | GotItems (Dict Int Item)
-    | GotTopItems (List Int)
+    | GotListIndex String (List Int)
 
 
 init : Request -> Flags -> ( Model, Cmd Msg )
 init _ _ =
-    ( { items = Dict.empty, topItems = [] }, Cmd.none )
+    ( { items = Dict.empty, listIndex = Dict.empty }, Cmd.none )
 
 
 update : Request -> Msg -> Model -> ( Model, Cmd Msg )
@@ -47,8 +47,8 @@ update _ msg model =
             , Cmd.none
             )
 
-        GotTopItems topItems ->
-            ( { model | topItems = topItems }
+        GotListIndex key ids ->
+            ( { model | listIndex = Dict.insert key ids model.listIndex }
             , Cmd.none
             )
 
@@ -67,6 +67,6 @@ gotItems items =
         )
 
 
-gotTopItems : List Int -> Msg
-gotTopItems topItems =
-    GotTopItems topItems
+gotListIndex : String -> List Int -> Msg
+gotListIndex key topItems =
+    GotListIndex key topItems

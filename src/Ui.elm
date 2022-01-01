@@ -6,6 +6,7 @@ import Gen.Route as Route exposing (Route)
 import Heroicons.Outline
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
+import Svg.Attributes
 import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw exposing (..)
 
@@ -56,13 +57,13 @@ layout config =
             [ Css.Global.global Tw.globalStyles
             , div [ css [ flex ] ]
                 [ div
-                    [ css [ mx_auto, fixed, Tw.hidden, Breakpoints.lg [ block ] ] ]
+                    [ css [ mx_auto, fixed, Tw.hidden, Breakpoints.xl [ block ] ] ]
                     [ viewMainMenu ]
                 , div
                     [ css
                         [ Tw.w_full
                         , Breakpoints.lg
-                            [ max_w_4xl
+                            [ max_w_3xl
                             ]
                         , mx_auto
                         , flex_grow
@@ -110,18 +111,37 @@ layout config =
 viewMainMenu : Html msg
 viewMainMenu =
     div
-        [ css
-            [ p_4
+        [ css [ p_4 ] ]
+        [ a
+            [ href (Route.toHref Route.Home_)
+            , css [ mb_8, block ]
+            ]
+            [ div [ css [ border_0, w_8, h_8, ml_4 ] ] [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
+            ]
+        , mainMenuLink Route.Home_ "Home" Heroicons.Outline.home
+        , mainMenuLink Route.Ask "Ask" Heroicons.Outline.users
+        , mainMenuLink Route.Show "Show" Heroicons.Outline.globe
+        , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase
+
+        --, mainMenuLink Route.Home_ "Stats" Heroicons.Outline.presentationChartLine
+        ]
+
+
+mainMenuLink route val icon =
+    a
+        [ href (Route.toHref route)
+        , css
+            [ block
+            , rounded_full
+            , py_2
+            , px_4
+            , mt_3
+            , Css.hover [ bg_gray_100 ]
             ]
         ]
-        [ div
-            [ css
-                [ border_0
-                , w_8
-                , h_8
-                ]
-            ]
-            [ img [ css [ rounded_full ], src "/logo.png" ] []
+        [ div [ css [ flex, items_center ] ]
+            [ div [ css [ w_8, h_8, mr_2 ] ] [ icon [] |> Html.fromUnstyled ]
+            , div [] [ text val ]
             ]
         ]
 

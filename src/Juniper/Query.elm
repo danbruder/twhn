@@ -39,6 +39,106 @@ topItems fillInOptionals____ object____ =
     Object.selectionForCompositeField "topItems" optionalArgs____ object____ (Basics.identity >> Decode.list)
 
 
+type alias AskItemsOptionalArguments =
+    { limit : OptionalArgument Int }
+
+
+askItems :
+    (AskItemsOptionalArguments -> AskItemsOptionalArguments)
+    -> SelectionSet decodesTo Juniper.Union.Item
+    -> SelectionSet (List decodesTo) RootQuery
+askItems fillInOptionals____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { limit = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "limit" filledInOptionals____.limit Encode.int ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "askItems" optionalArgs____ object____ (Basics.identity >> Decode.list)
+
+
+type alias JobItemsOptionalArguments =
+    { limit : OptionalArgument Int }
+
+
+jobItems :
+    (JobItemsOptionalArguments -> JobItemsOptionalArguments)
+    -> SelectionSet decodesTo Juniper.Union.Item
+    -> SelectionSet (List decodesTo) RootQuery
+jobItems fillInOptionals____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { limit = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "limit" filledInOptionals____.limit Encode.int ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "jobItems" optionalArgs____ object____ (Basics.identity >> Decode.list)
+
+
+type alias BestItemsOptionalArguments =
+    { limit : OptionalArgument Int }
+
+
+bestItems :
+    (BestItemsOptionalArguments -> BestItemsOptionalArguments)
+    -> SelectionSet decodesTo Juniper.Union.Item
+    -> SelectionSet (List decodesTo) RootQuery
+bestItems fillInOptionals____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { limit = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "limit" filledInOptionals____.limit Encode.int ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "bestItems" optionalArgs____ object____ (Basics.identity >> Decode.list)
+
+
+type alias NewItemsOptionalArguments =
+    { limit : OptionalArgument Int }
+
+
+newItems :
+    (NewItemsOptionalArguments -> NewItemsOptionalArguments)
+    -> SelectionSet decodesTo Juniper.Union.Item
+    -> SelectionSet (List decodesTo) RootQuery
+newItems fillInOptionals____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { limit = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "limit" filledInOptionals____.limit Encode.int ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "newItems" optionalArgs____ object____ (Basics.identity >> Decode.list)
+
+
+type alias ShowItemsOptionalArguments =
+    { limit : OptionalArgument Int }
+
+
+showItems :
+    (ShowItemsOptionalArguments -> ShowItemsOptionalArguments)
+    -> SelectionSet decodesTo Juniper.Union.Item
+    -> SelectionSet (List decodesTo) RootQuery
+showItems fillInOptionals____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { limit = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "limit" filledInOptionals____.limit Encode.int ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "showItems" optionalArgs____ object____ (Basics.identity >> Decode.list)
+
+
 type alias ItemByIdRequiredArguments =
     { id : Int }
 
