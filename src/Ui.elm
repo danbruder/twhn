@@ -57,7 +57,7 @@ layout config =
             [ Css.Global.global Tw.globalStyles
             , div [ css [ flex ] ]
                 [ div
-                    [ css [ mx_auto, fixed, Tw.hidden, Breakpoints.xl [ block ] ] ]
+                    [ css [ mx_auto, fixed ] ]
                     [ viewMainMenu ]
                 , div
                     [ css
@@ -137,11 +137,23 @@ mainMenuLink route val icon =
             , px_4
             , mt_3
             , Css.hover [ bg_gray_100 ]
+            , Tw.hidden
+            , Breakpoints.lg
+                [ block
+                ]
             ]
         ]
         [ div [ css [ flex, items_center ] ]
             [ div [ css [ w_8, h_8, mr_2 ] ] [ icon [] |> Html.fromUnstyled ]
-            , div [] [ text val ]
+            , div
+                [ css
+                    [ Tw.hidden
+                    , Breakpoints.xl
+                        [ block
+                        ]
+                    ]
+                ]
+                [ text val ]
             ]
         ]
 
