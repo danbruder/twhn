@@ -114,7 +114,13 @@ viewMainMenu =
         [ css [ p_4 ] ]
         [ a
             [ href (Route.toHref Route.Home_)
-            , css [ mb_8, block ]
+            , css
+                [ mb_8
+                , Tw.hidden
+                , Breakpoints.lg
+                    [ block
+                    ]
+                ]
             ]
             [ div [ css [ border_0, w_8, h_8, ml_4 ] ] [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
             ]

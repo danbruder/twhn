@@ -34,8 +34,14 @@ import View exposing (View)
 
 page : Shared.Model -> Request.With Params -> Page.With Model Msg
 page shared req =
+    let
+        commentsToShow =
+            Dict.get "commentsToShow" req.query
+                |> Maybe.andThen String.toInt
+                |> Maybe.withDefault 2
+    in
     Page.advanced
-        { init = init shared req.params.id
+        { init = init shared req.params.id commentsToShow
         , update = update
         , view = view
         , subscriptions = subscriptions
@@ -46,7 +52,13 @@ page shared req =
 -- INIT
 
 
-type Model
+type alias Model =
+    { status : Status
+    , commentsToShow : Int
+    }
+
+
+type Status
     = Loading
     | NotFound
     | Loaded
@@ -55,8 +67,8 @@ type Model
         }
 
 
-init : Shared.Model -> String -> ( Model, Effect Msg )
-init shared idStr =
+init : Shared.Model -> String -> Int -> ( Model, Effect Msg )
+init shared idStr commentsToShow =
     case String.toInt idStr of
         Just id ->
             case Dict.get id shared.items of
@@ -71,18 +83,18 @@ init shared idStr =
                                     )
                                 |> Dict.fromList
                     in
-                    ( Loaded { item = item, items = items }
+                    ( { status = Loaded { item = item, items = items }, commentsToShow = 2 }
                     , [ boot id, resetViewport ]
                         |> Effect.batch
                     )
 
                 Nothing ->
-                    ( Loading
+                    ( { status = Loading, commentsToShow = 2 }
                     , boot id
                     )
 
         _ ->
-            ( NotFound, Effect.none )
+            ( { status = NotFound, commentsToShow = 2 }, Effect.none )
 
 
 resetViewport : Effect Msg
@@ -148,15 +160,18 @@ update msg model =
                                         |> List.map (\item_ -> ( Item.id item_, item_ ))
                                         |> Dict.fromList
                             in
-                            ( Loaded
-                                { item = item
-                                , items = items
-                                }
+                            ( { model
+                                | status =
+                                    Loaded
+                                        { item = item
+                                        , items = items
+                                        }
+                              }
                             , Shared.gotItems (item :: Dict.values items) |> Effect.fromShared
                             )
 
                         _ ->
-                            ( NotFound, Effect.none )
+                            ( { model | status = NotFound }, Effect.none )
 
                 Err _ ->
                     ( model, Effect.none )
@@ -179,7 +194,7 @@ view : Model -> View msg
 view model =
     let
         title =
-            case model of
+            case model.status of
                 Loaded { item } ->
                     if Item.isComment item then
                         "Comment"
@@ -206,7 +221,7 @@ view model =
 
 viewBody : Model -> Html msg
 viewBody model =
-    case model of
+    case model.status of
         Loaded { item, items } ->
             viewItem item items
 
