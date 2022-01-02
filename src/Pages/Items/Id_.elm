@@ -42,7 +42,7 @@ page shared req =
         { init = init shared req.params.id
         , update = update
         , view = view req.route
-        , subscriptions = subscriptions
+        , subscriptions = always Sub.none
         }
 
 
@@ -67,7 +67,6 @@ buildThread root items =
 
 type alias Model =
     { status : Status
-    , expandedThread : Set Int
     }
 
 
@@ -83,18 +82,7 @@ init shared idStr =
         Just id ->
             case Dict.get id shared.items of
                 Just item ->
-                    let
-                        items =
-                            Item.kids item
-                                |> List.filterMap
-                                    (\kid ->
-                                        Dict.get kid shared.items
-                                            |> Maybe.map (Tuple.pair kid)
-                                    )
-                                |> Dict.fromList
-                    in
-                    ( { status = Loaded (buildThread item items)
-                      , expandedThread = Set.empty
+                    ( { status = Loaded (buildThread item shared.items)
                       }
                     , [ boot id, resetViewport ]
                         |> Effect.batch
@@ -102,14 +90,12 @@ init shared idStr =
 
                 Nothing ->
                     ( { status = Loading
-                      , expandedThread = Set.empty
                       }
                     , boot id
                     )
 
         _ ->
             ( { status = NotFound
-              , expandedThread = Set.empty
               }
             , Effect.none
             )
@@ -178,11 +164,7 @@ update msg model =
                                         |> List.map (\item_ -> ( Item.id item_, item_ ))
                                         |> Dict.fromList
                             in
-                            ( { model
-                                | status =
-                                    Loaded
-                                        (buildThread item items)
-                              }
+                            ( { model | status = Loaded (buildThread item items) }
                             , Shared.gotItems (item :: Dict.values items) |> Effect.fromShared
                             )
 
@@ -191,15 +173,6 @@ update msg model =
 
                 Err _ ->
                     ( model, Effect.none )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
 
 
 
@@ -335,6 +308,19 @@ viewStory story =
         ]
 
 
+viewComment : Comment -> Html msg
+viewComment comment =
+    div []
+        [ div [ css [ flex, items_center, pb_2 ] ]
+            [ h2 [ css [ font_bold, mr_1 ] ] [ text comment.by ]
+            , span [ css [ mr_1 ] ] [ text comment.humanTime ]
+            ]
+        , div
+            [ class "rendered-comment" ]
+            (Util.textHtml comment.text)
+        ]
+
+
 viewUrl : Url -> Html msg
 viewUrl url =
     a
@@ -347,36 +333,4 @@ viewUrl url =
             ]
         ]
         [ url.host |> text
-        ]
-
-
-viewSection : Html msg -> Html msg
-viewSection body =
-    div
-        [ css
-            [ p_4
-            , text_sm
-            ]
-        ]
-        [ body
-        ]
-
-
-viewThreaddedComment : Comment -> Html msg
-viewThreaddedComment comment =
-    div [ css [ my_4, p_4, rounded_lg, bg_gray_50 ] ]
-        [ viewComment comment
-        ]
-
-
-viewComment : Comment -> Html msg
-viewComment comment =
-    div []
-        [ div [ css [ flex, items_center, pb_2 ] ]
-            [ h2 [ css [ font_bold, mr_1 ] ] [ text comment.by ]
-            , span [ css [ mr_1 ] ] [ text comment.humanTime ]
-            ]
-        , div
-            [ class "rendered-comment" ]
-            (Util.textHtml comment.text)
         ]
