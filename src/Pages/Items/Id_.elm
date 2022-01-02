@@ -267,7 +267,7 @@ viewThread thread =
         labelToHtml : Item -> Html msg
         labelToHtml item =
             div
-                [ css [ p_4, bg_gray_50, rounded, m_4, border_l_2 ]
+                [ css [ p_4, bg_gray_50, rounded_lg, m_4, border_l_2 ]
                 ]
                 [ renderItem item
                 ]
