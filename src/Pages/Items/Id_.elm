@@ -2,6 +2,7 @@ module Pages.Items.Id_ exposing (Model, Msg, page)
 
 import Api
 import Browser.Dom as Dom
+import Css
 import Dict exposing (Dict)
 import Domain.Comment exposing (Comment)
 import Domain.Item as Item exposing (Item(..))
@@ -22,10 +23,13 @@ import Juniper.Union.Item as Item
 import Page
 import Request
 import Selections
+import Set exposing (Set)
 import Shared
 import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw exposing (..)
 import Task
+import Tree exposing (Tree)
+import Tree.Zipper
 import Ui
 import Url exposing (Url)
 import Util
@@ -42,22 +46,35 @@ page shared req =
         }
 
 
+type alias Thread =
+    Tree Item
+
+
+buildThread : Item -> Dict Int Item -> Thread
+buildThread root items =
+    let
+        handleKids item =
+            Item.kids item
+                |> List.filterMap (\id -> Dict.get id items)
+                |> List.map (\i -> Tree.tree i (handleKids i))
+    in
+    Tree.tree root (handleKids root)
+
+
 
 -- INIT
 
 
 type alias Model =
     { status : Status
+    , expandedThread : Set Int
     }
 
 
 type Status
     = Loading
     | NotFound
-    | Loaded
-        { item : Item
-        , items : Dict Int Item
-        }
+    | Loaded Thread
 
 
 init : Shared.Model -> String -> ( Model, Effect Msg )
@@ -76,18 +93,26 @@ init shared idStr =
                                     )
                                 |> Dict.fromList
                     in
-                    ( { status = Loaded { item = item, items = items } }
+                    ( { status = Loaded (buildThread item items)
+                      , expandedThread = Set.empty
+                      }
                     , [ boot id, resetViewport ]
                         |> Effect.batch
                     )
 
                 Nothing ->
-                    ( { status = Loading }
+                    ( { status = Loading
+                      , expandedThread = Set.empty
+                      }
                     , boot id
                     )
 
         _ ->
-            ( { status = NotFound }, Effect.none )
+            ( { status = NotFound
+              , expandedThread = Set.empty
+              }
+            , Effect.none
+            )
 
 
 resetViewport : Effect Msg
@@ -156,9 +181,7 @@ update msg model =
                             ( { model
                                 | status =
                                     Loaded
-                                        { item = item
-                                        , items = items
-                                        }
+                                        (buildThread item items)
                               }
                             , Shared.gotItems (item :: Dict.values items) |> Effect.fromShared
                             )
@@ -188,11 +211,11 @@ view route model =
     let
         title =
             case model.status of
-                Loaded { item } ->
-                    if Item.isComment item then
+                Loaded thread ->
+                    if Item.isComment (Tree.label thread) then
                         "Comment"
 
-                    else if Item.isStory item then
+                    else if Item.isStory (Tree.label thread) then
                         "Story"
 
                     else
@@ -216,8 +239,8 @@ view route model =
 viewBody : Model -> Html msg
 viewBody model =
     case model.status of
-        Loaded { item, items } ->
-            viewItem item items
+        Loaded thread ->
+            viewThread thread
 
         Loading ->
             Ui.centralMessage "Loading..."
@@ -226,87 +249,89 @@ viewBody model =
             Ui.centralMessage "Not found"
 
 
-sectionCss =
-    [ p_4
-    , border_b
-    , border_gray_200
-    ]
-
-
-viewItem : Item -> Dict Int Item -> Html msg
-viewItem item items =
+viewThread : Thread -> Html msg
+viewThread thread =
     let
-        getKids : Item -> List Item
-        getKids parent =
-            parent
-                |> Item.kids
-                |> List.filterMap (\k -> Dict.get k items)
-
-        renderedTopItem =
+        renderItem : Item -> Html msg
+        renderItem item =
             case item of
                 Item__Story story ->
                     viewStory story
 
                 Item__Comment comment ->
-                    viewComment comment []
+                    viewComment comment
 
-                Item__Job job ->
-                    div [] []
+                _ ->
+                    text ""
 
-        renderedComments =
-            getKids item
-                |> List.filterMap Item.comment
-                |> List.map
-                    (\c ->
-                        viewComment c
-                            (getKids (Item__Comment c)
-                                |> List.filterMap Item.comment
-                            )
-                    )
-                |> div []
+        labelToHtml : Item -> Html msg
+        labelToHtml item =
+            div
+                [ css [ p_4, bg_gray_50, rounded, m_4, border_l_2 ]
+                ]
+                [ renderItem item
+                ]
+
+        toListItems : Html msg -> List (Html msg) -> Html msg
+        toListItems label children =
+            case children of
+                [] ->
+                    label
+
+                _ ->
+                    div []
+                        [ label
+                        , div
+                            [ css [ ml_4 ]
+                            ]
+                            children
+                        ]
     in
-    div []
-        [ renderedTopItem
-        , renderedComments
+    div [ css [ text_sm ] ]
+        [ div
+            [ css [ p_4, border_b ]
+            ]
+            [ renderItem (Tree.label thread) ]
+        , div []
+            (thread
+                |> Tree.children
+                |> List.map (Tree.restructure labelToHtml toListItems)
+            )
         ]
 
 
 viewStory : Story -> Html msg
 viewStory story =
     div [ css [ text_sm ] ]
-        [ div
-            [ css sectionCss
-            ]
-            [ h1 [ css [ font_bold ] ] [ story.title |> text ]
-            , div
-                [ css [ flex, items_center, flex_wrap, text_xs, text_gray_500 ] ]
-                [ story.url
-                    |> Maybe.map
-                        (\url ->
-                            span [ css [ flex, items_center ] ]
-                                [ span [ css [ mr_1 ] ] [ viewUrl url ]
-                                ]
-                        )
-                    |> Maybe.withDefault (text "")
-                , span [ css [ mr_1 ] ] [ text story.humanTime ]
-                , span [ css [ mr_1 ] ] [ text "by" ]
-                , span [ css [ mr_1 ] ] [ text story.by ]
-                , if not (List.isEmpty story.kids) then
-                    span [ css [ flex, items_center ] ]
-                        [ span [ css [ mr_1 ] ]
-                            [ (List.length story.kids |> String.fromInt)
-                                ++ " comments"
-                                |> text
+        [ h1 [ css [ font_bold ] ] [ story.title |> text ]
+        , div
+            [ css [ flex, items_center, flex_wrap, text_xs, text_gray_500 ] ]
+            [ story.url
+                |> Maybe.map
+                    (\url ->
+                        span [ css [ flex, items_center ] ]
+                            [ span [ css [ mr_1 ] ] [ viewUrl url ]
                             ]
+                    )
+                |> Maybe.withDefault (text "")
+            , span [ css [ mr_1 ] ] [ text story.humanTime ]
+            , span [ css [ mr_1 ] ] [ text "by" ]
+            , span [ css [ mr_1 ] ] [ text story.by ]
+            , if not (List.isEmpty story.kids) then
+                span [ css [ flex, items_center ] ]
+                    [ span [ css [ mr_1 ] ]
+                        [ (List.length story.kids |> String.fromInt)
+                            ++ " comments"
+                            |> text
                         ]
+                    ]
 
-                  else
-                    text ""
-                ]
-            , div
-                [ class "rendered-comment" ]
-                (Util.textHtml story.safeText)
+              else
+                text ""
             ]
+        , div
+            [ class "rendered-comment" ]
+            (Util.textHtml story.safeText)
         ]
 
 
@@ -325,43 +350,33 @@ viewUrl url =
         ]
 
 
-viewComment : Comment -> List Comment -> Html msg
-viewComment comment comments =
-    let
-        renderSingle inner =
-            div []
-                [ div [ css [ flex, items_center, pb_2 ] ]
-                    [ h2 [ css [ font_bold, mr_1 ] ] [ text inner.by ]
-                    , span [ css [ mr_1 ] ] [ text inner.humanTime ]
-                    ]
-                , div
-                    [ class "rendered-comment" ]
-                    (Util.textHtml inner.text)
-                ]
+viewSection : Html msg -> Html msg
+viewSection body =
+    div
+        [ css
+            [ p_4
+            , text_sm
+            ]
+        ]
+        [ body
+        ]
 
-        thing =
-            div [ css [ h_6, w_px, ml_2, bg_gray_300, mt_2, mb_1 ] ] []
 
-        renderSubComment inner =
-            div [ css [ my_4, p_4, rounded_lg, bg_gray_50 ] ]
-                [ renderSingle inner
-                ]
+viewThreaddedComment : Comment -> Html msg
+viewThreaddedComment comment =
+    div [ css [ my_4, p_4, rounded_lg, bg_gray_50 ] ]
+        [ viewComment comment
+        ]
 
-        hasMore =
-            List.length comments > 2
-    in
-    div [ css (sectionCss ++ [ text_sm ]) ]
-        [ renderSingle comment
-        , div [] <| List.map renderSubComment (List.take 2 comments)
-        , if hasMore then
-            div [ css [ underline ] ]
-                [ Ui.viewLink ("Show this thread (" ++ String.fromInt (List.length comments) ++ ")")
-                    (Route.Items__Id_
-                        { id = String.fromInt comment.id
-                        }
-                    )
-                ]
 
-          else
-            text ""
+viewComment : Comment -> Html msg
+viewComment comment =
+    div []
+        [ div [ css [ flex, items_center, pb_2 ] ]
+            [ h2 [ css [ font_bold, mr_1 ] ] [ text comment.by ]
+            , span [ css [ mr_1 ] ] [ text comment.humanTime ]
+            ]
+        , div
+            [ class "rendered-comment" ]
+            (Util.textHtml comment.text)
         ]

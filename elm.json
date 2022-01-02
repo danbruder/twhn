@@ -20,7 +20,8 @@
             "jasonliang-dev/elm-heroicons": "1.0.3",
             "matheus23/elm-default-tailwind-modules": "2.0.2",
             "rtfeldman/elm-css": "17.0.1",
-            "ryannhg/elm-spa": "6.0.0"
+            "ryannhg/elm-spa": "6.0.0",
+            "zwilias/elm-rosetree": "1.5.0"
         },
         "indirect": {
             "elm/bytes": "1.0.8",
