@@ -34,14 +34,8 @@ import View exposing (View)
 
 page : Shared.Model -> Request.With Params -> Page.With Model Msg
 page shared req =
-    let
-        commentsToShow =
-            Dict.get "commentsToShow" req.query
-                |> Maybe.andThen String.toInt
-                |> Maybe.withDefault 2
-    in
     Page.advanced
-        { init = init shared req.params.id commentsToShow
+        { init = init shared req.params.id
         , update = update
         , view = view req.route
         , subscriptions = subscriptions
@@ -54,7 +48,6 @@ page shared req =
 
 type alias Model =
     { status : Status
-    , commentsToShow : Int
     }
 
 
@@ -67,8 +60,8 @@ type Status
         }
 
 
-init : Shared.Model -> String -> Int -> ( Model, Effect Msg )
-init shared idStr commentsToShow =
+init : Shared.Model -> String -> ( Model, Effect Msg )
+init shared idStr =
     case String.toInt idStr of
         Just id ->
             case Dict.get id shared.items of
@@ -83,18 +76,18 @@ init shared idStr commentsToShow =
                                     )
                                 |> Dict.fromList
                     in
-                    ( { status = Loaded { item = item, items = items }, commentsToShow = commentsToShow }
+                    ( { status = Loaded { item = item, items = items } }
                     , [ boot id, resetViewport ]
                         |> Effect.batch
                     )
 
                 Nothing ->
-                    ( { status = Loading, commentsToShow = commentsToShow }
+                    ( { status = Loading }
                     , boot id
                     )
 
         _ ->
-            ( { status = NotFound, commentsToShow = commentsToShow }, Effect.none )
+            ( { status = NotFound }, Effect.none )
 
 
 resetViewport : Effect Msg
@@ -224,7 +217,7 @@ viewBody : Model -> Html msg
 viewBody model =
     case model.status of
         Loaded { item, items } ->
-            viewItem item items model.commentsToShow
+            viewItem item items
 
         Loading ->
             Ui.centralMessage "Loading..."
@@ -240,8 +233,8 @@ sectionCss =
     ]
 
 
-viewItem : Item -> Dict Int Item -> Int -> Html msg
-viewItem item items commentsToShow =
+viewItem : Item -> Dict Int Item -> Html msg
+viewItem item items =
     let
         getKids : Item -> List Item
         getKids parent =
@@ -255,7 +248,7 @@ viewItem item items commentsToShow =
                     viewStory story
 
                 Item__Comment comment ->
-                    viewComment comment [] commentsToShow
+                    viewComment comment []
 
                 Item__Job job ->
                     div [] []
@@ -269,7 +262,6 @@ viewItem item items commentsToShow =
                             (getKids (Item__Comment c)
                                 |> List.filterMap Item.comment
                             )
-                            commentsToShow
                     )
                 |> div []
     in
@@ -333,8 +325,8 @@ viewUrl url =
         ]
 
 
-viewComment : Comment -> List Comment -> Int -> Html msg
-viewComment comment comments commentsToShow =
+viewComment : Comment -> List Comment -> Html msg
+viewComment comment comments =
     let
         renderSingle inner =
             div []
@@ -356,19 +348,18 @@ viewComment comment comments commentsToShow =
                 ]
 
         hasMore =
-            List.length comments > commentsToShow
+            List.length comments > 2
     in
     div [ css (sectionCss ++ [ text_sm ]) ]
         [ renderSingle comment
-        , div [] <| List.map renderSubComment (List.take commentsToShow comments)
+        , div [] <| List.map renderSubComment (List.take 2 comments)
         , if hasMore then
             div [ css [ underline ] ]
-                [ Ui.viewLinkWithQuery ("Show this thread (" ++ String.fromInt (List.length comments) ++ ")")
+                [ Ui.viewLink ("Show this thread (" ++ String.fromInt (List.length comments) ++ ")")
                     (Route.Items__Id_
                         { id = String.fromInt comment.id
                         }
                     )
-                    (Dict.fromList [ ( "commentsToShow", String.fromInt 100 ) ])
                 ]
 
           else
