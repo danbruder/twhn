@@ -4,7 +4,7 @@ import Api
 import Browser.Dom as Dom
 import Css
 import Dict exposing (Dict)
-import Domain.Comment exposing (Comment)
+import Domain.Comment as Comment exposing (Comment)
 import Domain.Item as Item exposing (Item(..))
 import Domain.Story exposing (Story)
 import Effect exposing (Effect)
@@ -15,6 +15,7 @@ import Graphql.OptionalArgument as OptionalArgument exposing (..)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, hardcoded, with)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
+import Html.Styled.Events as Ev
 import Juniper.Object.Comment as Comment
 import Juniper.Object.Story as Story
 import Juniper.Query as Query
@@ -50,13 +51,20 @@ type alias Thread =
     Tree Item
 
 
-buildThread : Item -> Dict Int Item -> Thread
-buildThread root items =
+buildThread : Item -> Set Int -> Dict Int Item -> Thread
+buildThread root expandedItems items =
     let
+        makeTree item =
+            if Set.member (Item.id item) expandedItems then
+                Tree.tree item (handleKids item)
+
+            else
+                Tree.singleton item
+
         handleKids item =
             Item.kids item
                 |> List.filterMap (\id -> Dict.get id items)
-                |> List.map (\i -> Tree.tree i (handleKids i))
+                |> List.map makeTree
     in
     Tree.tree root (handleKids root)
 
@@ -67,13 +75,17 @@ buildThread root items =
 
 type alias Model =
     { status : Status
+    , expandedItems : Set Int
     }
 
 
 type Status
     = Loading
     | NotFound
-    | Loaded Thread
+    | Loaded
+        { items : Dict Int Item
+        , item : Item
+        }
 
 
 init : Shared.Model -> String -> ( Model, Effect Msg )
@@ -82,7 +94,12 @@ init shared idStr =
         Just id ->
             case Dict.get id shared.items of
                 Just item ->
-                    ( { status = Loaded (buildThread item shared.items)
+                    ( { status =
+                            Loaded
+                                { items = shared.items
+                                , item = item
+                                }
+                      , expandedItems = Set.empty
                       }
                     , [ boot id, resetViewport ]
                         |> Effect.batch
@@ -90,12 +107,14 @@ init shared idStr =
 
                 Nothing ->
                     ( { status = Loading
+                      , expandedItems = Set.empty
                       }
                     , boot id
                     )
 
         _ ->
             ( { status = NotFound
+              , expandedItems = Set.empty
               }
             , Effect.none
             )
@@ -139,6 +158,8 @@ boot id =
 
 type Msg
     = GotItem (Result (Graphql.Http.Error Response) Response)
+    | ClickedExpandItem Int
+    | ClickedCollapseItem Int
     | NoOp
 
 
@@ -147,6 +168,12 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Effect.none )
+
+        ClickedExpandItem id ->
+            ( { model | expandedItems = Set.insert id model.expandedItems }, Effect.none )
+
+        ClickedCollapseItem id ->
+            ( { model | expandedItems = Set.remove id model.expandedItems }, Effect.none )
 
         GotItem response ->
             case response of
@@ -164,7 +191,13 @@ update msg model =
                                         |> List.map (\item_ -> ( Item.id item_, item_ ))
                                         |> Dict.fromList
                             in
-                            ( { model | status = Loaded (buildThread item items) }
+                            ( { model
+                                | status =
+                                    Loaded
+                                        { item = item
+                                        , items = items
+                                        }
+                              }
                             , Shared.gotItems (item :: Dict.values items) |> Effect.fromShared
                             )
 
@@ -179,16 +212,16 @@ update msg model =
 -- VIEW
 
 
-view : Route -> Model -> View msg
+view : Route -> Model -> View Msg
 view route model =
     let
         title =
             case model.status of
-                Loaded thread ->
-                    if Item.isComment (Tree.label thread) then
+                Loaded { item } ->
+                    if Item.isComment item then
                         "Comment"
 
-                    else if Item.isStory (Tree.label thread) then
+                    else if Item.isStory item then
                         "Story"
 
                     else
@@ -209,11 +242,11 @@ view route model =
     }
 
 
-viewBody : Model -> Html msg
+viewBody : Model -> Html Msg
 viewBody model =
     case model.status of
-        Loaded thread ->
-            viewThread thread
+        Loaded { items, item } ->
+            viewThread (buildThread item model.expandedItems items) model.expandedItems
 
         Loading ->
             Ui.centralMessage "Loading..."
@@ -222,22 +255,22 @@ viewBody model =
             Ui.centralMessage "Not found"
 
 
-viewThread : Thread -> Html msg
-viewThread thread =
+viewThread : Thread -> Set Int -> Html Msg
+viewThread thread expandedItems =
     let
-        renderItem : Item -> Html msg
+        renderItem : Item -> Html Msg
         renderItem item =
             case item of
                 Item__Story story ->
                     viewStory story
 
                 Item__Comment comment ->
-                    viewComment comment
+                    viewComment comment (Set.member comment.id expandedItems)
 
                 _ ->
                     text ""
 
-        labelToHtml : Item -> Html msg
+        labelToHtml : Item -> Html Msg
         labelToHtml item =
             div
                 [ css [ p_4, bg_gray_50, rounded_lg, m_4, border_l_2 ]
@@ -245,7 +278,7 @@ viewThread thread =
                 [ renderItem item
                 ]
 
-        toListItems : Html msg -> List (Html msg) -> Html msg
+        toListItems : Html Msg -> List (Html Msg) -> Html Msg
         toListItems label children =
             case children of
                 [] ->
@@ -273,7 +306,7 @@ viewThread thread =
         ]
 
 
-viewStory : Story -> Html msg
+viewStory : Story -> Html Msg
 viewStory story =
     div [ css [ text_sm ] ]
         [ h1 [ css [ font_bold ] ] [ story.title |> text ]
@@ -308,8 +341,18 @@ viewStory story =
         ]
 
 
-viewComment : Comment -> Html msg
-viewComment comment =
+viewComment : Comment -> Bool -> Html Msg
+viewComment comment isExpanded =
+    let
+        childrenCount =
+            List.length comment.kids
+
+        hasKids =
+            childrenCount > 0
+
+        buttonCss =
+            [ border, p_1, Css.cursor Css.pointer ]
+    in
     div []
         [ div [ css [ flex, items_center, pb_2 ] ]
             [ h2 [ css [ font_bold, mr_1 ] ] [ text comment.by ]
@@ -318,10 +361,53 @@ viewComment comment =
         , div
             [ class "rendered-comment" ]
             (Util.textHtml comment.text)
+        , div
+            [ css
+                [ flex
+                , justify_end
+                , pt_2
+                , text_gray_500
+                ]
+            ]
+            [ case ( hasKids, isExpanded ) of
+                ( True, True ) ->
+                    div
+                        [ Ev.onClick (ClickedCollapseItem comment.id)
+                        , css buttonCss
+                        ]
+                        [ text "Collapse Comments"
+                        ]
+
+                ( True, False ) ->
+                    let
+                        plural =
+                            childrenCount > 1
+                    in
+                    div
+                        [ Ev.onClick (ClickedExpandItem comment.id)
+                        , css buttonCss
+                        ]
+                        [ text
+                            ("Comment"
+                                ++ (if plural then
+                                        "s"
+
+                                    else
+                                        ""
+                                   )
+                                ++ " ("
+                                ++ String.fromInt childrenCount
+                                ++ ")"
+                            )
+                        ]
+
+                ( False, _ ) ->
+                    text ""
+            ]
         ]
 
 
-viewUrl : Url -> Html msg
+viewUrl : Url -> Html Msg
 viewUrl url =
     a
         [ href (url |> Url.toString)

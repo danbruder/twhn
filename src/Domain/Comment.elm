@@ -1,4 +1,4 @@
-module Domain.Comment exposing (Comment)
+module Domain.Comment exposing (Comment, hasKids)
 
 
 type alias Comment =
@@ -9,3 +9,8 @@ type alias Comment =
     , parent : Int
     , kids : List Int
     }
+
+
+hasKids : Comment -> Bool
+hasKids comment =
+    List.isEmpty comment.kids |> not
