@@ -266,10 +266,10 @@ viewThread thread expandedItems =
         renderFirstItem item =
             case item of
                 Item__Story story ->
-                    div []
-                        [ viewStory story
+                    div [ css [ relative ] ]
+                        [ div [ css [ p_4 ] ] [ viewStory story ]
                         , if not (List.isEmpty story.ranks) then
-                            chart story.ranks
+                            div [ css [ p_4, Breakpoints.lg [ p_0, absolute, top_0, right_0 ] ] ] [ chart story.ranks ]
 
                           else
                             text ""
@@ -317,21 +317,20 @@ viewThread thread expandedItems =
         chart ranks =
             [ C.chart
                 [ CA.height 100
-                , CA.width 300
+                , CA.width 600
                 ]
-                [ C.xLabels [ CA.times Time.utc ]
-                , C.series (.ts >> Time.posixToMillis >> toFloat)
-                    [ C.interpolated (.value >> (-) 30 >> toFloat) [ CA.opacity 0.3, CA.gradient [], CA.color "orange" ] []
+                [ C.series (.ts >> Time.posixToMillis >> toFloat)
+                    [ C.interpolated (.value >> (-) 30 >> toFloat) [ CA.opacity 0.1, CA.gradient [], CA.color "orange" ] []
                     ]
                     ranks
                 ]
                 |> Html.fromUnstyled
             ]
-                |> div [ css [ w_40, h_20, pt_4 ] ]
+                |> div [ css [ w_full, Breakpoints.lg [ w_60 ], h_20 ] ]
     in
     div [ css [ text_sm ] ]
         [ div
-            [ css [ p_4, border_b, relative ]
+            [ css [ border_b, relative ]
             ]
             [ renderFirstItem (Tree.label thread)
             ]
