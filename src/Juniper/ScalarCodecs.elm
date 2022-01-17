@@ -16,9 +16,14 @@ type alias Id =
     Juniper.Scalar.Id
 
 
-codecs : Juniper.Scalar.Codecs DateTime Id
+type alias NaiveDateTime =
+    Juniper.Scalar.NaiveDateTime
+
+
+codecs : Juniper.Scalar.Codecs DateTime Id NaiveDateTime
 codecs =
     Juniper.Scalar.defineCodecs
         { codecDateTime = defaultCodecs.codecDateTime
         , codecId = defaultCodecs.codecId
+        , codecNaiveDateTime = defaultCodecs.codecNaiveDateTime
         }

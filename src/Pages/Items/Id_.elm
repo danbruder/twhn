@@ -2,6 +2,8 @@ module Pages.Items.Id_ exposing (Model, Msg, page)
 
 import Api
 import Browser.Dom as Dom
+import Chart as C
+import Chart.Attributes as CA
 import Css
 import Dict exposing (Dict)
 import Domain.Comment as Comment exposing (Comment)
@@ -26,9 +28,11 @@ import Request
 import Selections
 import Set exposing (Set)
 import Shared
+import Svg as S
 import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw exposing (..)
 import Task
+import Time
 import Tree exposing (Tree)
 import Tree.Zipper
 import Ui
@@ -258,6 +262,22 @@ viewBody model =
 viewThread : Thread -> Set Int -> Html Msg
 viewThread thread expandedItems =
     let
+        renderFirstItem : Item -> Html Msg
+        renderFirstItem item =
+            case item of
+                Item__Story story ->
+                    div []
+                        [ viewStory story
+                        , if not (List.isEmpty story.ranks) then
+                            chart story.ranks
+
+                          else
+                            text ""
+                        ]
+
+                _ ->
+                    text ""
+
         renderItem : Item -> Html Msg
         renderItem item =
             case item of
@@ -292,12 +312,29 @@ viewThread thread expandedItems =
                             ]
                             children
                         ]
+
+        chart : List Domain.Story.Rank -> Html Msg
+        chart ranks =
+            [ C.chart
+                [ CA.height 100
+                , CA.width 300
+                ]
+                [ C.xLabels [ CA.times Time.utc ]
+                , C.series (.ts >> Time.posixToMillis >> toFloat)
+                    [ C.interpolated (.value >> (-) 30 >> toFloat) [ CA.opacity 0.3, CA.gradient [], CA.color "orange" ] []
+                    ]
+                    ranks
+                ]
+                |> Html.fromUnstyled
+            ]
+                |> div [ css [ w_40, h_20, pt_4 ] ]
     in
     div [ css [ text_sm ] ]
         [ div
-            [ css [ p_4, border_b ]
+            [ css [ p_4, border_b, relative ]
             ]
-            [ renderItem (Tree.label thread) ]
+            [ renderFirstItem (Tree.label thread)
+            ]
         , div []
             (thread
                 |> Tree.children

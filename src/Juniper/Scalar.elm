@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Juniper.Scalar exposing (Codecs, DateTime(..), Id(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
+module Juniper.Scalar exposing (Codecs, DateTime(..), Id(..), NaiveDateTime(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
 
 import Graphql.Codec exposing (Codec)
 import Graphql.Internal.Builder.Object as Object
@@ -19,45 +19,52 @@ type Id
     = Id String
 
 
+type NaiveDateTime
+    = NaiveDateTime String
+
+
 defineCodecs :
     { codecDateTime : Codec valueDateTime
     , codecId : Codec valueId
+    , codecNaiveDateTime : Codec valueNaiveDateTime
     }
-    -> Codecs valueDateTime valueId
+    -> Codecs valueDateTime valueId valueNaiveDateTime
 defineCodecs definitions =
     Codecs definitions
 
 
 unwrapCodecs :
-    Codecs valueDateTime valueId
+    Codecs valueDateTime valueId valueNaiveDateTime
     ->
         { codecDateTime : Codec valueDateTime
         , codecId : Codec valueId
+        , codecNaiveDateTime : Codec valueNaiveDateTime
         }
 unwrapCodecs (Codecs unwrappedCodecs) =
     unwrappedCodecs
 
 
 unwrapEncoder :
-    (RawCodecs valueDateTime valueId -> Codec getterValue)
-    -> Codecs valueDateTime valueId
+    (RawCodecs valueDateTime valueId valueNaiveDateTime -> Codec getterValue)
+    -> Codecs valueDateTime valueId valueNaiveDateTime
     -> getterValue
     -> Graphql.Internal.Encode.Value
 unwrapEncoder getter (Codecs unwrappedCodecs) =
     (unwrappedCodecs |> getter |> .encoder) >> Graphql.Internal.Encode.fromJson
 
 
-type Codecs valueDateTime valueId
-    = Codecs (RawCodecs valueDateTime valueId)
+type Codecs valueDateTime valueId valueNaiveDateTime
+    = Codecs (RawCodecs valueDateTime valueId valueNaiveDateTime)
 
 
-type alias RawCodecs valueDateTime valueId =
+type alias RawCodecs valueDateTime valueId valueNaiveDateTime =
     { codecDateTime : Codec valueDateTime
     , codecId : Codec valueId
+    , codecNaiveDateTime : Codec valueNaiveDateTime
     }
 
 
-defaultCodecs : RawCodecs DateTime Id
+defaultCodecs : RawCodecs DateTime Id NaiveDateTime
 defaultCodecs =
     { codecDateTime =
         { encoder = \(DateTime raw) -> Encode.string raw
@@ -66,5 +73,9 @@ defaultCodecs =
     , codecId =
         { encoder = \(Id raw) -> Encode.string raw
         , decoder = Object.scalarDecoder |> Decode.map Id
+        }
+    , codecNaiveDateTime =
+        { encoder = \(NaiveDateTime raw) -> Encode.string raw
+        , decoder = Object.scalarDecoder |> Decode.map NaiveDateTime
         }
     }

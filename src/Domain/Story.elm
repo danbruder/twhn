@@ -1,5 +1,6 @@
 module Domain.Story exposing (..)
 
+import Time exposing (Posix)
 import Url exposing (Url)
 
 
@@ -12,4 +13,11 @@ type alias Story =
     , score : Int
     , humanTime : String
     , kids : List Int
+    , ranks : List Rank
+    }
+
+
+type alias Rank =
+    { value : Int
+    , ts : Posix
     }

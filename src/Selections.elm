@@ -13,10 +13,14 @@ import Graphql.OptionalArgument as OptionalArgument exposing (..)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, hardcoded, with)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
+import Iso8601
+import Juniper.Object
 import Juniper.Object.Comment as Comment
+import Juniper.Object.ItemMetric as ItemMetric
 import Juniper.Object.Job as Job
 import Juniper.Object.Story as Story
 import Juniper.Query as Query
+import Juniper.Scalar exposing (..)
 import Juniper.Union
 import Juniper.Union.Item as ItemUnion
 import Page
@@ -24,6 +28,7 @@ import Request
 import Shared
 import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw exposing (..)
+import Time exposing (Posix)
 import Ui
 import Url exposing (Url)
 import Util
@@ -54,6 +59,14 @@ item =
                     |> with Story.score
                     |> with Story.humanTime
                     |> with (SelectionSet.withDefault [] Story.kids)
+                    |> with
+                        (SelectionSet.map
+                            (\ranks ->
+                                ranks
+                                    |> List.filter (\r -> r.value <= 30)
+                            )
+                            (Story.rank rankSelection)
+                        )
                 )
         , onJob =
             SelectionSet.map Item__Job
@@ -99,3 +112,17 @@ ancestors =
         , onStory = SelectionSet.succeed identity |> hardcoded []
         , onJob = SelectionSet.succeed identity |> hardcoded []
         }
+
+
+rankSelection : SelectionSet Domain.Story.Rank Juniper.Object.ItemMetric
+rankSelection =
+    SelectionSet.succeed Domain.Story.Rank
+        |> with ItemMetric.value
+        |> with (SelectionSet.mapOrFail parseTheDate ItemMetric.createdAt)
+
+
+parseTheDate : Juniper.Scalar.NaiveDateTime -> Result String Posix
+parseTheDate (NaiveDateTime dateStr) =
+    dateStr
+        |> Iso8601.toTime
+        |> Result.mapError (always "")

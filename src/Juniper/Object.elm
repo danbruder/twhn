@@ -9,6 +9,10 @@ type Comment
     = Comment
 
 
+type ItemMetric
+    = ItemMetric
+
+
 type Job
     = Job
 

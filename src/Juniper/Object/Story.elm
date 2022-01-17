@@ -86,3 +86,10 @@ safeText =
 humanTime : SelectionSet String Juniper.Object.Story
 humanTime =
     Object.selectionForField "String" "humanTime" [] Decode.string
+
+
+rank :
+    SelectionSet decodesTo Juniper.Object.ItemMetric
+    -> SelectionSet (List decodesTo) Juniper.Object.Story
+rank object____ =
+    Object.selectionForCompositeField "rank" [] object____ (Basics.identity >> Decode.list)
