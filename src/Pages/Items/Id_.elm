@@ -372,7 +372,11 @@ viewStory story =
                 text ""
             ]
         , div
-            [ class "rendered-comment" ]
+            [ class "rendered-comment"
+            , css
+                [ pt_2
+                ]
+            ]
             (Util.textHtml story.safeText)
         ]
 

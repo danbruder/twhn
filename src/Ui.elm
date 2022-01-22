@@ -105,6 +105,7 @@ layout config =
                             , bg_white
                             , border_l
                             , border_r
+                            , z_10
                             ]
                         ]
                         [ a
