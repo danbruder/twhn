@@ -162,21 +162,37 @@ view title route model =
 
 viewItems : List Item -> Html msg
 viewItems items =
-    items
-        |> List.filter (\item -> Item.isStory item || Item.isJob item)
-        |> List.indexedMap
-            (\index item ->
-                case item of
-                    Item__Story story ->
-                        viewStory index story
+    if List.isEmpty items then
+        div
+            [ css
+                [ text_sm
+                , text_gray_500
+                , flex
+                , justify_center
+                , items_center
+                , py_8
+                ]
+            ]
+            [ text "Nothing here..." ]
 
-                    Item__Job job ->
-                        viewJob index job
+    else
+        items
+            |> List.filter (\item -> Item.isStory item || Item.isJob item)
+            |> List.indexedMap
+                (\index item ->
+                    case item of
+                        Item__Story story ->
+                            viewStory index story
 
-                    _ ->
-                        text ""
-            )
-        |> ul []
+                        Item__Job job ->
+                            viewJob index job
+
+                        _ ->
+                            text ""
+                )
+            |> ul
+                [ css [ pb_4 ]
+                ]
 
 
 viewStory : Int -> Story -> Html msg

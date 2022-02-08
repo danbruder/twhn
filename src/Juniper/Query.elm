@@ -151,8 +151,21 @@ itemById requiredArgs____ object____ =
     Object.selectionForCompositeField "itemById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ (Basics.identity >> Decode.nullable)
 
 
+type alias BookmarkedItemsOptionalArguments =
+    { limit : OptionalArgument Int }
+
+
 bookmarkedItems :
-    SelectionSet decodesTo Juniper.Union.Item
+    (BookmarkedItemsOptionalArguments -> BookmarkedItemsOptionalArguments)
+    -> SelectionSet decodesTo Juniper.Union.Item
     -> SelectionSet (List decodesTo) RootQuery
-bookmarkedItems object____ =
-    Object.selectionForCompositeField "bookmarkedItems" [] object____ (Basics.identity >> Decode.list)
+bookmarkedItems fillInOptionals____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { limit = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "limit" filledInOptionals____.limit Encode.int ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "bookmarkedItems" optionalArgs____ object____ (Basics.identity >> Decode.list)

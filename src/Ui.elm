@@ -194,6 +194,7 @@ viewMainMenu currentRoute =
         , mainMenuLink Route.Ask "Ask" Heroicons.Outline.users
         , mainMenuLink Route.Show "Show" Heroicons.Outline.globe
         , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase
+        , mainMenuLink Route.Bookmarks "Bookmarks" Heroicons.Outline.bookmark
 
         --, mainMenuLink Route.Home_ "Stats" Heroicons.Outline.presentationChartLine
         ]

@@ -419,33 +419,41 @@ viewStory story =
                 ]
             ]
             (Util.textHtml story.safeText)
-        , button
-            [ if story.isBookmarked then
-                Ev.onClick (ClickedUnBookmark story.id)
-
-              else
-                Ev.onClick (ClickedBookmark story.id)
-            , css [ flex, p_2, rounded, border, border_gray_200 ]
-            ]
-            [ div [ css [ w_4, mr_1 ] ]
-                [ if story.isBookmarked then
-                    div [ css [ text_red_500 ] ]
-                        [ Heroicons.Solid.heart []
-                            |> Html.fromUnstyled
-                        ]
-
-                  else
-                    div [ css [ text_gray_500 ] ]
-                        [ Heroicons.Outline.heart []
-                            |> Html.fromUnstyled
-                        ]
+        , div
+            [ css
+                [ justify_end
+                , w_full
+                , flex
                 ]
-            , div [ css [ text_gray_500, text_xs ] ]
+            ]
+            [ button
                 [ if story.isBookmarked then
-                    text "Bookmarked"
+                    Ev.onClick (ClickedUnBookmark story.id)
 
                   else
-                    text "Bookmark"
+                    Ev.onClick (ClickedBookmark story.id)
+                , css [ flex, p_2, mt_2, rounded, border, border_gray_200 ]
+                ]
+                [ div [ css [ w_4, mr_1 ] ]
+                    [ if story.isBookmarked then
+                        div [ css [ text_gray_500 ] ]
+                            [ Heroicons.Solid.bookmark []
+                                |> Html.fromUnstyled
+                            ]
+
+                      else
+                        div [ css [ text_gray_500 ] ]
+                            [ Heroicons.Outline.bookmark []
+                                |> Html.fromUnstyled
+                            ]
+                    ]
+                , div [ css [ text_gray_500, text_xs ] ]
+                    [ if story.isBookmarked then
+                        text "Bookmarked"
+
+                      else
+                        text "Bookmark"
+                    ]
                 ]
             ]
         ]
