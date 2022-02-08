@@ -14,6 +14,7 @@ type alias Story =
     , humanTime : String
     , kids : List Int
     , ranks : List Rank
+    , isBookmarked : Bool
     }
 
 

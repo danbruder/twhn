@@ -149,3 +149,10 @@ itemById :
     -> SelectionSet (Maybe decodesTo) RootQuery
 itemById requiredArgs____ object____ =
     Object.selectionForCompositeField "itemById" [ Argument.required "id" requiredArgs____.id Encode.int ] object____ (Basics.identity >> Decode.nullable)
+
+
+bookmarkedItems :
+    SelectionSet decodesTo Juniper.Union.Item
+    -> SelectionSet (List decodesTo) RootQuery
+bookmarkedItems object____ =
+    Object.selectionForCompositeField "bookmarkedItems" [] object____ (Basics.identity >> Decode.list)

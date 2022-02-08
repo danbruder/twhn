@@ -15,9 +15,12 @@ import Gen.Route as Route exposing (Route)
 import Graphql.Http
 import Graphql.OptionalArgument as OptionalArgument exposing (..)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, hardcoded, with)
+import Heroicons.Outline
+import Heroicons.Solid
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
 import Html.Styled.Events as Ev
+import Juniper.Mutation as Mutation
 import Juniper.Object.Comment as Comment
 import Juniper.Object.Story as Story
 import Juniper.Query as Query
@@ -162,8 +165,11 @@ boot id =
 
 type Msg
     = GotItem (Result (Graphql.Http.Error Response) Response)
+    | GotBookmarkedItem (Result (Graphql.Http.Error (Maybe Item)) (Maybe Item))
     | ClickedExpandItem Int
     | ClickedCollapseItem Int
+    | ClickedBookmark Int
+    | ClickedUnBookmark Int
     | NoOp
 
 
@@ -178,6 +184,41 @@ update msg model =
 
         ClickedCollapseItem id ->
             ( { model | expandedItems = Set.remove id model.expandedItems }, Effect.none )
+
+        ClickedBookmark id ->
+            ( model
+            , Mutation.bookmarkItem { itemId = id } Selections.item
+                |> Api.makeMutation GotBookmarkedItem
+                |> Effect.fromCmd
+            )
+
+        ClickedUnBookmark id ->
+            ( model
+            , Mutation.unbookmarkItem { itemId = id } Selections.item
+                |> Api.makeMutation GotBookmarkedItem
+                |> Effect.fromCmd
+            )
+
+        GotBookmarkedItem response ->
+            case response of
+                Ok payload ->
+                    case ( payload, model.status ) of
+                        ( Just item, Loaded { items } ) ->
+                            ( { model
+                                | status =
+                                    Loaded
+                                        { item = item
+                                        , items = items
+                                        }
+                              }
+                            , Shared.gotItems [ item ] |> Effect.fromShared
+                            )
+
+                        _ ->
+                            ( { model | status = NotFound }, Effect.none )
+
+                Err _ ->
+                    ( model, Effect.none )
 
         GotItem response ->
             case response of
@@ -378,6 +419,35 @@ viewStory story =
                 ]
             ]
             (Util.textHtml story.safeText)
+        , button
+            [ if story.isBookmarked then
+                Ev.onClick (ClickedUnBookmark story.id)
+
+              else
+                Ev.onClick (ClickedBookmark story.id)
+            , css [ flex, p_2, rounded, border, border_gray_200 ]
+            ]
+            [ div [ css [ w_4, mr_1 ] ]
+                [ if story.isBookmarked then
+                    div [ css [ text_red_500 ] ]
+                        [ Heroicons.Solid.heart []
+                            |> Html.fromUnstyled
+                        ]
+
+                  else
+                    div [ css [ text_gray_500 ] ]
+                        [ Heroicons.Outline.heart []
+                            |> Html.fromUnstyled
+                        ]
+                ]
+            , div [ css [ text_gray_500, text_xs ] ]
+                [ if story.isBookmarked then
+                    text "Bookmarked"
+
+                  else
+                    text "Bookmark"
+                ]
+            ]
         ]
 
 

@@ -67,6 +67,7 @@ item =
                             )
                             (Story.rank rankSelection)
                         )
+                    |> with Story.isBookmarked
                 )
         , onJob =
             SelectionSet.map Item__Job

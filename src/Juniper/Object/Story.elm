@@ -93,3 +93,8 @@ rank :
     -> SelectionSet (List decodesTo) Juniper.Object.Story
 rank object____ =
     Object.selectionForCompositeField "rank" [] object____ (Basics.identity >> Decode.list)
+
+
+isBookmarked : SelectionSet Bool Juniper.Object.Story
+isBookmarked =
+    Object.selectionForField "Bool" "isBookmarked" [] Decode.bool
