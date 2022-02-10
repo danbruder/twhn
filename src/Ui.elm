@@ -50,14 +50,14 @@ centralMessage : String -> Html msg
 centralMessage message =
     div
         [ css
-            [ pt_4
-            , px_2
+            [ px_2
             , pl_3
             , text_sm
             , flex
             , justify_center
             , h_56
-            , items_center
+            , pt_16
+            , h_screen
             ]
         ]
         [ text message ]
@@ -130,7 +130,7 @@ layout config =
                 ]
             , div
                 [ css [ mx_auto, fixed, Tw.hidden, Breakpoints.lg [ block ] ] ]
-                [ viewSidebar ]
+                []
             ]
         ]
 
@@ -195,8 +195,6 @@ viewMainMenu currentRoute =
         , mainMenuLink Route.Show "Show" Heroicons.Outline.globe
         , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase
         , mainMenuLink Route.Bookmarks "Bookmarks" Heroicons.Outline.bookmark
-
-        --, mainMenuLink Route.Home_ "Stats" Heroicons.Outline.presentationChartLine
         ]
 
 
