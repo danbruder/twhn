@@ -78,54 +78,19 @@ layout config =
                 , Breakpoints.lg
                     [ px_8
                     ]
+                , h_screen
+                , overflow_y_hidden
                 ]
             ]
             [ Css.Global.global Tw.globalStyles
             , div [ css [ flex ] ]
-                [ div
-                    [ css [ mx_auto, fixed ] ]
-                    [ viewMainMenu config.route ]
-                , div
-                    [ css
-                        [ Tw.w_full
-                        , Breakpoints.lg
-                            [ max_w_3xl
-                            ]
-                        , mx_auto
-                        , flex_grow
+                [ div [ css [ mx_auto, fixed ] ] [ viewMainMenu config.route ]
+                , div [ css [ Tw.w_full, Breakpoints.lg [ max_w_3xl ], mx_auto, flex_grow ] ]
+                    [ div [ css [ p_4, flex, sticky, top_0, items_center, bg_white, border_l, border_r, z_10 ] ]
+                        [ a [ Attr.href (Route.toHref Route.Home_), css [ w_6, block, mr_2, Breakpoints.lg [ Tw.hidden ] ] ] [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
+                        , h1 [ css [ font_bold, text_xl ] ] [ text config.title ]
                         ]
-                    ]
-                    [ div
-                        [ css
-                            [ p_4
-                            , flex
-                            , sticky
-                            , top_0
-                            , items_center
-                            , bg_white
-                            , border_l
-                            , border_r
-                            , z_10
-                            ]
-                        ]
-                        [ a
-                            [ Attr.href (Route.toHref Route.Home_)
-                            , css
-                                [ w_6
-                                , block
-                                , mr_2
-                                , Breakpoints.lg
-                                    [ Tw.hidden
-                                    ]
-                                ]
-                            ]
-                            [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
-                        , h1
-                            [ css [ font_bold, text_xl ]
-                            ]
-                            [ text config.title ]
-                        ]
-                    , div [ css [ border, border_t, border_gray_200 ] ] config.children
+                    , div [ css [ border, border_t, border_gray_200, h_screen, overflow_y_scroll ], class "scrollbar-none" ] config.children
                     ]
                 ]
             , div
@@ -179,18 +144,60 @@ viewMainMenu currentRoute =
     div
         [ css [ p_4 ] ]
         [ a
-            [ href (Route.toHref Route.Home_)
-            , css
-                [ mb_8
-                , Tw.hidden
-                , Breakpoints.lg
+            [ href (Route.toHref Route.Home_), css [ mb_8, Tw.hidden, Breakpoints.lg [ block ] ] ]
+            [ div [ css [ border_0, w_8, h_8, ml_4 ] ] [ img [ css [ rounded_full ], src "/logo.png" ] [] ] ]
+        , mainMenuLink Route.Home_ "Home" Heroicons.Outline.home
+        , mainMenuLink Route.Ask "Ask" Heroicons.Outline.users
+        , mainMenuLink Route.Show "Show" Heroicons.Outline.globe
+        , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase
+        , mainMenuLink Route.Bookmarks "Bookmarks" Heroicons.Outline.bookmark
+        ]
+
+
+viewMobileMenu : Route -> Html msg
+viewMobileMenu currentRoute =
+    let
+        isActive route =
+            route == currentRoute
+
+        mainMenuLink route val icon =
+            a
+                [ href (Route.toHref route)
+                , css
                     [ block
+                    , rounded_full
+                    , py_2
+                    , px_4
+                    , mt_3
+                    , Css.hover [ bg_gray_100 ]
+                    , block
+                    , Breakpoints.lg
+                        [ Tw.hidden
+                        ]
+                    , if isActive route then
+                        font_bold
+
+                      else
+                        font_normal
                     ]
                 ]
-            ]
-            [ div [ css [ border_0, w_8, h_8, ml_4 ] ] [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
-            ]
-        , mainMenuLink Route.Home_ "Home" Heroicons.Outline.home
+                [ div [ css [ flex, items_center ] ]
+                    [ div [ css [ w_8, h_8, mr_2 ] ] [ icon [] |> Html.fromUnstyled ]
+                    , div
+                        [ css
+                            [ Tw.hidden
+                            , Breakpoints.xl
+                                [ block
+                                ]
+                            ]
+                        ]
+                        [ text val ]
+                    ]
+                ]
+    in
+    div
+        [ css [ p_4 ] ]
+        [ mainMenuLink Route.Home_ "Home" Heroicons.Outline.home
         , mainMenuLink Route.Ask "Ask" Heroicons.Outline.users
         , mainMenuLink Route.Show "Show" Heroicons.Outline.globe
         , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase
