@@ -5,6 +5,7 @@ import Css.Global
 import Dict exposing (Dict)
 import Gen.Route as Route exposing (Route)
 import Heroicons.Outline
+import Heroicons.Solid
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
 import Svg.Attributes
@@ -84,7 +85,10 @@ layout config =
             ]
             [ Css.Global.global Tw.globalStyles
             , div [ css [ flex ] ]
-                [ div [ css [ mx_auto, fixed ] ] [ viewMainMenu config.route ]
+                [ div [ css [ mx_auto, fixed ] ]
+                    [ viewMainMenu config.route
+                    ]
+                , viewMobileMenu config.route
                 , div [ css [ Tw.w_full, Breakpoints.lg [ max_w_3xl ], mx_auto, flex_grow ] ]
                     [ div [ css [ p_4, flex, sticky, top_0, items_center, bg_white, border_l, border_r, z_10 ] ]
                         [ a [ Attr.href (Route.toHref Route.Home_), css [ w_6, block, mr_2, Breakpoints.lg [ Tw.hidden ] ] ] [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
@@ -160,16 +164,13 @@ viewMobileMenu currentRoute =
         isActive route =
             route == currentRoute
 
-        mainMenuLink route val icon =
+        mainMenuLink route val icon iconSolid =
             a
                 [ href (Route.toHref route)
                 , css
                     [ block
                     , rounded_full
-                    , py_2
-                    , px_4
-                    , mt_3
-                    , Css.hover [ bg_gray_100 ]
+                    , p_4
                     , block
                     , Breakpoints.lg
                         [ Tw.hidden
@@ -182,7 +183,15 @@ viewMobileMenu currentRoute =
                     ]
                 ]
                 [ div [ css [ flex, items_center ] ]
-                    [ div [ css [ w_8, h_8, mr_2 ] ] [ icon [] |> Html.fromUnstyled ]
+                    [ div [ css [ w_7, h_7, mr_2 ] ]
+                        [ (if isActive route then
+                            iconSolid []
+
+                           else
+                            icon []
+                          )
+                            |> Html.fromUnstyled
+                        ]
                     , div
                         [ css
                             [ Tw.hidden
@@ -196,12 +205,12 @@ viewMobileMenu currentRoute =
                 ]
     in
     div
-        [ css [ p_4 ] ]
-        [ mainMenuLink Route.Home_ "Home" Heroicons.Outline.home
-        , mainMenuLink Route.Ask "Ask" Heroicons.Outline.users
-        , mainMenuLink Route.Show "Show" Heroicons.Outline.globe
-        , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase
-        , mainMenuLink Route.Bookmarks "Bookmarks" Heroicons.Outline.bookmark
+        [ css [ fixed, bottom_0, flex, justify_around, w_full, bg_white, border_t ] ]
+        [ mainMenuLink Route.Home_ "Home" Heroicons.Outline.home Heroicons.Solid.home
+        , mainMenuLink Route.Ask "Ask" Heroicons.Outline.users Heroicons.Solid.users
+        , mainMenuLink Route.Show "Show" Heroicons.Outline.globe Heroicons.Solid.globe
+        , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase Heroicons.Solid.briefcase
+        , mainMenuLink Route.Bookmarks "Bookmarks" Heroicons.Outline.bookmark Heroicons.Solid.bookmark
         ]
 
 
