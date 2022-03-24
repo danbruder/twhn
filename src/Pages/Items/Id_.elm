@@ -308,12 +308,7 @@ viewThread thread expandedItems =
             case item of
                 Item__Story story ->
                     div [ css [ relative ] ]
-                        [ div [ css [ p_4 ] ] [ viewStory story ]
-                        , if not (List.isEmpty story.ranks) then
-                            div [ css [ p_4, Breakpoints.lg [ p_0, absolute, top_0, right_0 ] ] ] [ chart story.ranks ]
-
-                          else
-                            text ""
+                        [ div [ css [] ] [ viewStory story ]
                         ]
 
                 _ ->
@@ -353,21 +348,6 @@ viewThread thread expandedItems =
                             ]
                             children
                         ]
-
-        chart : List Domain.Story.Rank -> Html Msg
-        chart ranks =
-            [ C.chart
-                [ CA.height 100
-                , CA.width 600
-                ]
-                [ C.series (.ts >> Time.posixToMillis >> toFloat)
-                    [ C.interpolated (.value >> (-) 30 >> toFloat) [ CA.opacity 0.1, CA.gradient [], CA.color "orange" ] []
-                    ]
-                    ranks
-                ]
-                |> Html.fromUnstyled
-            ]
-                |> div [ css [ w_full, Breakpoints.lg [ w_60 ], h_20 ] ]
     in
     div [ css [ text_sm ] ]
         [ div
@@ -385,54 +365,81 @@ viewThread thread expandedItems =
 
 viewStory : Story -> Html Msg
 viewStory story =
+    let
+        chart : List Domain.Story.Rank -> Html Msg
+        chart ranks =
+            [ C.chart
+                [ CA.height 80
+                , CA.width 600
+                ]
+                [ C.series (.ts >> Time.posixToMillis >> toFloat)
+                    [ C.interpolated (.value >> (-) 30 >> toFloat) [ CA.opacity 0.1, CA.gradient [], CA.color "orange" ] []
+                    ]
+                    ranks
+                ]
+                |> Html.fromUnstyled
+            ]
+                |> div [ css [ w_48, h_6 ] ]
+    in
     div [ css [ text_sm ] ]
-        [ h1 [ css [ font_bold ] ] [ story.title |> text ]
-        , div
-            [ css [ flex, items_center, flex_wrap, text_xs, text_gray_500 ] ]
-            [ story.url
-                |> Maybe.map
-                    (\url ->
-                        span [ css [ flex, items_center ] ]
-                            [ span [ css [ mr_1 ] ] [ viewUrl url ]
+        [ div [ css [ p_4 ] ]
+            [ h1 [ css [ font_bold ] ] [ story.title |> text ]
+            , div
+                [ css [ flex, items_center, flex_wrap, text_xs, text_gray_500 ] ]
+                [ story.url
+                    |> Maybe.map
+                        (\url ->
+                            span [ css [ flex, items_center ] ]
+                                [ span [ css [ mr_1 ] ] [ viewUrl url ]
+                                ]
+                        )
+                    |> Maybe.withDefault (text "")
+                , span [ css [ mr_1 ] ] [ text story.humanTime ]
+                , span [ css [ mr_1 ] ] [ text "by" ]
+                , span [ css [ mr_1 ] ] [ text story.by ]
+                , if not (List.isEmpty story.kids) then
+                    span [ css [ flex, items_center ] ]
+                        [ span [ css [ mr_1 ] ]
+                            [ (List.length story.kids |> String.fromInt)
+                                ++ " comments"
+                                |> text
                             ]
-                    )
-                |> Maybe.withDefault (text "")
-            , span [ css [ mr_1 ] ] [ text story.humanTime ]
-            , span [ css [ mr_1 ] ] [ text "by" ]
-            , span [ css [ mr_1 ] ] [ text story.by ]
-            , if not (List.isEmpty story.kids) then
-                span [ css [ flex, items_center ] ]
-                    [ span [ css [ mr_1 ] ]
-                        [ (List.length story.kids |> String.fromInt)
-                            ++ " comments"
-                            |> text
                         ]
+
+                  else
+                    text ""
+                ]
+            , div
+                [ class "rendered-comment"
+                , css
+                    [ pt_2
+                    ]
+                ]
+                (Util.textHtml story.safeText)
+            ]
+        , div
+            [ css
+                [ justify_between
+                , w_full
+                , flex
+                , items_center
+                , border_t
+                ]
+            ]
+            [ if not (List.isEmpty story.ranks) then
+                div [ css [ pl_4 ] ]
+                    [ chart story.ranks
                     ]
 
               else
                 text ""
-            ]
-        , div
-            [ class "rendered-comment"
-            , css
-                [ pt_2
-                ]
-            ]
-            (Util.textHtml story.safeText)
-        , div
-            [ css
-                [ justify_end
-                , w_full
-                , flex
-                ]
-            ]
-            [ button
+            , button
                 [ if story.isBookmarked then
                     Ev.onClick (ClickedUnBookmark story.id)
 
                   else
                     Ev.onClick (ClickedBookmark story.id)
-                , css [ flex, p_2, mt_2, rounded, border, border_gray_200 ]
+                , css [ flex, p_4, Css.hover [ bg_gray_50 ] ]
                 ]
                 [ div [ css [ w_4, mr_1 ] ]
                     [ if story.isBookmarked then
