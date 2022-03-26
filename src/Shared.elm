@@ -9,9 +9,14 @@ module Shared exposing
     , update
     )
 
+import Api
 import Dict exposing (Dict)
 import Domain.Item as Item exposing (Item)
+import Graphql.Http
+import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, hardcoded, with)
 import Json.Decode as Json
+import Juniper.Object.Stats as Stats
+import Juniper.Query as Query
 import Request exposing (Request)
 
 
@@ -22,6 +27,7 @@ type alias Flags =
 type alias Model =
     { items : Dict Int Item
     , listIndex : Dict String (List Int)
+    , stats : Maybe Stats
     }
 
 
@@ -29,11 +35,12 @@ type Msg
     = GotItem Item
     | GotItems (Dict Int Item)
     | GotListIndex String (List Int)
+    | GotStats (Result (Graphql.Http.Error Stats) Stats)
 
 
 init : Request -> Flags -> ( Model, Cmd Msg )
 init _ _ =
-    ( { items = Dict.empty, listIndex = Dict.empty }, Cmd.none )
+    ( { items = Dict.empty, listIndex = Dict.empty, stats = Nothing }, Cmd.none )
 
 
 update : Request -> Msg -> Model -> ( Model, Cmd Msg )
@@ -51,6 +58,16 @@ update _ msg model =
             ( { model | listIndex = Dict.insert key ids model.listIndex }
             , Cmd.none
             )
+
+        GotStats response ->
+            case response of
+                Ok stats ->
+                    ( { model | stats = Just stats }
+                    , Cmd.none
+                    )
+
+                Err _ ->
+                    ( model, Cmd.none )
 
 
 subscriptions : Request -> Model -> Sub Msg
@@ -70,3 +87,17 @@ gotItems items =
 gotListIndex : String -> List Int -> Msg
 gotListIndex key topItems =
     GotListIndex key topItems
+
+
+getStats : Cmd Msg
+getStats =
+    Query.stats
+        (SelectionSet.succeed Stats
+            |> SelectionSet.with Stats.itemCount
+        )
+        |> Api.makeRequest GotStats
+
+
+type alias Stats =
+    { itemCount : Int
+    }

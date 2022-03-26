@@ -169,3 +169,10 @@ bookmarkedItems fillInOptionals____ object____ =
                 |> List.filterMap Basics.identity
     in
     Object.selectionForCompositeField "bookmarkedItems" optionalArgs____ object____ (Basics.identity >> Decode.list)
+
+
+stats :
+    SelectionSet decodesTo Juniper.Object.Stats
+    -> SelectionSet decodesTo RootQuery
+stats object____ =
+    Object.selectionForCompositeField "stats" [] object____ Basics.identity
