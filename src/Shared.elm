@@ -40,7 +40,7 @@ type Msg
 
 init : Request -> Flags -> ( Model, Cmd Msg )
 init _ _ =
-    ( { items = Dict.empty, listIndex = Dict.empty, stats = Nothing }, Cmd.none )
+    ( { items = Dict.empty, listIndex = Dict.empty, stats = Nothing }, getStats )
 
 
 update : Request -> Msg -> Model -> ( Model, Cmd Msg )
