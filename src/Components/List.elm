@@ -17,7 +17,6 @@ import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, hardcoded, w
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
 import Http
-import Juniper.Object.Stats as Stats
 import Juniper.Object.Story as Story
 import Juniper.Query as Query
 import Juniper.Union
