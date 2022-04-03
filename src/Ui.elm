@@ -79,20 +79,18 @@ layout config =
                 , Breakpoints.lg
                     [ px_8
                     ]
-                , h_screen
-                , overflow_y_hidden
                 ]
             ]
             [ Css.Global.global Tw.globalStyles
             , div [ css [ flex ] ]
-                [ viewMainMenu config.route
+                [ div [ css [ sticky, top_0, bottom_0, h_screen ] ] [ viewMainMenu config.route ]
                 , viewMobileMenu config.route
                 , div [ css [ Tw.w_full, Breakpoints.lg [ max_w_3xl ], flex_grow ] ]
                     [ div [ css [ p_4, flex, sticky, top_0, items_center, bg_white, border_l, border_r, z_10 ] ]
                         [ a [ Attr.href (Route.toHref Route.Home_), css [ w_6, block, mr_2, Breakpoints.lg [ Tw.hidden ] ] ] [ img [ css [ rounded_full ], src "/logo.png" ] [] ]
                         , h1 [ css [ font_bold, text_xl ] ] [ text config.title ]
                         ]
-                    , div [ css [ border, border_t, border_gray_200, h_screen, overflow_y_scroll, pb_32, Breakpoints.lg [ pb_16 ] ], class "scrollbar-none" ] config.children
+                    , div [ css [ border, border_t, border_gray_200, pb_32, Breakpoints.lg [ pb_16 ] ], class "scrollbar-none" ] config.children
                     ]
                 ]
             , div
