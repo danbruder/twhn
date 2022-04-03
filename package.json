@@ -5,14 +5,14 @@
   "author": "Dan Bruder <danbruder@hey.com>",
   "license": "MIT",
   "dependencies": {
-    "elm-spa": "^6.0.4"
+    "elm-spa": "^6.0.4",
+    "localforage": "^1.10.0"
   },
   "scripts": {
     "start": "elm-spa server",
     "build": "elm-spa build",
     "api": "elm-graphql https://twhn.dev.danbruder.com --base Juniper",
     "api:local": "elm-graphql http://localhost:8000 --base Juniper"
-
   },
   "devDependencies": {
     "@dillonkearns/elm-graphql": "^4.2.2"
