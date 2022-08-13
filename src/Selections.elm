@@ -46,6 +46,7 @@ item =
                     |> with Comment.by
                     |> with Comment.humanTime
                     |> with Comment.parent
+                    |> with Comment.isBookmarked
                     |> with (SelectionSet.withDefault [] Comment.kids)
                 )
         , onStory =

@@ -7,6 +7,7 @@ type alias Comment =
     , by : String
     , humanTime : String
     , parent : Int
+    , isBookmarked : Bool
     , kids : List Int
     }
 

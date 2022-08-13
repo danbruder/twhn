@@ -17,9 +17,5 @@ type Job
     = Job
 
 
-type Stats
-    = Stats
-
-
 type Story
     = Story

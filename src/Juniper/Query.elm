@@ -171,8 +171,6 @@ bookmarkedItems fillInOptionals____ object____ =
     Object.selectionForCompositeField "bookmarkedItems" optionalArgs____ object____ (Basics.identity >> Decode.list)
 
 
-stats :
-    SelectionSet decodesTo Juniper.Object.Stats
-    -> SelectionSet decodesTo RootQuery
-stats object____ =
-    Object.selectionForCompositeField "stats" [] object____ Basics.identity
+stats : SelectionSet String RootQuery
+stats =
+    Object.selectionForField "String" "stats" [] Decode.string

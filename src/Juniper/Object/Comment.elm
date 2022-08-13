@@ -78,3 +78,8 @@ safeText =
 humanTime : SelectionSet String Juniper.Object.Comment
 humanTime =
     Object.selectionForField "String" "humanTime" [] Decode.string
+
+
+isBookmarked : SelectionSet Bool Juniper.Object.Comment
+isBookmarked =
+    Object.selectionForField "Bool" "isBookmarked" [] Decode.bool

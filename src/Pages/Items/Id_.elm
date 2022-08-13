@@ -203,13 +203,21 @@ update msg model =
             case response of
                 Ok payload ->
                     case ( payload, model.status ) of
-                        ( Just item, Loaded { items } ) ->
+                        ( Just item_, Loaded { item, items } ) ->
                             ( { model
                                 | status =
-                                    Loaded
-                                        { item = item
-                                        , items = items
-                                        }
+                                    -- It's a story
+                                    if Item.id item_ == Item.id item then
+                                        Loaded
+                                            { item = item_
+                                            , items = items
+                                            }
+
+                                    else
+                                        Loaded
+                                            { item = item
+                                            , items = Dict.insert (Item.id item) item_ items
+                                            }
                               }
                             , Shared.gotItems [ item ] |> Effect.fromShared
                             )
@@ -433,35 +441,39 @@ viewStory story =
 
               else
                 text ""
-            , button
-                [ if story.isBookmarked then
-                    Ev.onClick (ClickedUnBookmark story.id)
+            , bookmarkButton story.isBookmarked story.id
+            ]
+        ]
 
-                  else
-                    Ev.onClick (ClickedBookmark story.id)
-                , css [ flex, p_4, Css.hover [ bg_gray_50 ] ]
-                ]
-                [ div [ css [ w_4, mr_1 ] ]
-                    [ if story.isBookmarked then
-                        div [ css [ text_gray_500 ] ]
-                            [ Heroicons.Solid.bookmark []
-                                |> Html.fromUnstyled
-                            ]
 
-                      else
-                        div [ css [ text_gray_500 ] ]
-                            [ Heroicons.Outline.bookmark []
-                                |> Html.fromUnstyled
-                            ]
+bookmarkButton isBookmarked id =
+    button
+        [ if isBookmarked then
+            Ev.onClick (ClickedUnBookmark id)
+
+          else
+            Ev.onClick (ClickedBookmark id)
+        , css [ flex, p_4, Css.hover [ bg_gray_50 ] ]
+        ]
+        [ div [ css [ w_4, mr_1 ] ]
+            [ if isBookmarked then
+                div [ css [ text_gray_500 ] ]
+                    [ Heroicons.Solid.bookmark []
+                        |> Html.fromUnstyled
                     ]
-                , div [ css [ text_gray_500, text_xs ] ]
-                    [ if story.isBookmarked then
-                        text "Bookmarked"
 
-                      else
-                        text "Bookmark"
+              else
+                div [ css [ text_gray_500 ] ]
+                    [ Heroicons.Outline.bookmark []
+                        |> Html.fromUnstyled
                     ]
-                ]
+            ]
+        , div [ css [ text_gray_500, text_xs ] ]
+            [ if isBookmarked then
+                text "Bookmarked"
+
+              else
+                text "Bookmark"
             ]
         ]
 
@@ -490,11 +502,13 @@ viewComment comment isExpanded =
             [ css
                 [ flex
                 , justify_end
-                , pt_2
+                , mt_2
                 , text_gray_500
+                , items_center
                 ]
             ]
-            [ case ( hasKids, isExpanded ) of
+            [ --bookmarkButton comment.isBookmarked comment.id
+              case ( hasKids, isExpanded ) of
                 ( True, True ) ->
                     div
                         [ Ev.onClick (ClickedCollapseItem comment.id)
