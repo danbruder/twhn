@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "elm-spa server",
-    "build": "elm-spa build",
+    "build": "ls",
     "api": "elm-graphql https://twhn.dev.danbruder.com --base Juniper",
     "api:local": "elm-graphql http://localhost:8000 --base Juniper"
   },
