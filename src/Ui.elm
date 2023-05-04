@@ -154,6 +154,7 @@ viewMainMenu currentRoute =
         , mainMenuLink Route.Ask "Ask" Heroicons.Outline.users
         , mainMenuLink Route.Show "Show" Heroicons.Outline.globe
         , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase
+        , mainMenuLink Route.New "New" Heroicons.Outline.newspaper
         , mainMenuLink Route.Bookmarks "Bookmarks" Heroicons.Outline.bookmark
         ]
 
@@ -210,6 +211,7 @@ viewMobileMenu currentRoute =
         , mainMenuLink Route.Ask "Ask" Heroicons.Outline.users Heroicons.Solid.users
         , mainMenuLink Route.Show "Show" Heroicons.Outline.globe Heroicons.Solid.globe
         , mainMenuLink Route.Jobs "Jobs" Heroicons.Outline.briefcase Heroicons.Solid.briefcase
+        , mainMenuLink Route.New "New" Heroicons.Outline.newspaper Heroicons.Solid.newspaper
         , mainMenuLink Route.Bookmarks "Bookmarks" Heroicons.Outline.bookmark Heroicons.Solid.bookmark
         ]
 
