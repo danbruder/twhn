@@ -57,7 +57,7 @@ init { cachedList, query, allItems } =
             ( Loading, getItems query )
 
         items ->
-            ( Loaded items, getItems query )
+            ( Loaded items, Effect.none )
 
 
 type alias ItemsQuery decodesTo =
